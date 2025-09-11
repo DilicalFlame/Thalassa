@@ -1,0 +1,48 @@
+openapi: 3.0.3
+info:
+  title: Thalassa API
+  description: API for ocean data exploration and AI co-pilot
+  version: 0.1.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+paths:
+  /:
+    get:
+      operationId: getWelcome
+      summary: Root endpoint
+      responses:
+        '200':
+          description: Welcome message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WelcomeResponse'
+  /health:
+    get:
+      operationId: getHealth
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+      required:
+        - status
+    WelcomeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message

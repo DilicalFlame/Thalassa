@@ -1,67 +1,132 @@
-// app/components/globe/Landmasses.tsx
-'use client';
+'use client'
 
-import * as THREE from 'three';
-import earcut from 'earcut';
-import { useMemo } from 'react';
+import * as THREE from 'three'
+import { useMemo } from 'react'
 
-// Utility function to convert lat/lon to a 3D vector
-export function lonLatToVector3(lon: number, lat: number, radius = 5): THREE.Vector3 {
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lon + 180) * (Math.PI / 180);
-    const x = -(radius * Math.sin(phi) * Math.cos(theta));
-    const y = radius * Math.cos(phi);
-    const z = radius * Math.sin(phi) * Math.sin(theta);
-    return new THREE.Vector3(x, y, z);
+// TypeScript interfaces for GeoJSON data
+interface GeoJSONCoordinate extends Array<number> {
+  0: number // longitude
+  1: number // latitude
 }
 
-// This component processes GeoJSON and creates solid, filled-in meshes
-export const SolidLandmasses = ({ data }: { data: any }) => {
-    const landGeometry = useMemo(() => {
-        const geometry = new THREE.BufferGeometry();
-        const allVertices: number[] = [];
-        const allIndices: number[] = [];
-        let vertexOffset = 0;
+interface GeoJSONPolygon {
+  type: 'Polygon'
+  coordinates: GeoJSONCoordinate[][]
+}
 
-        data.features.forEach((feature: any) => {
-            const polygons = feature.geometry.type === 'Polygon'
-                    ? [feature.geometry.coordinates]
-                    : feature.geometry.coordinates;
+interface GeoJSONMultiPolygon {
+  type: 'MultiPolygon'
+  coordinates: GeoJSONCoordinate[][][]
+}
 
-            polygons.forEach((polygon: any[][]) => {
-                const outerRing = polygon[0];
-                const flatCoordinates = outerRing.flat();
+interface GeoJSONFeature {
+  type: 'Feature'
+  geometry: GeoJSONPolygon | GeoJSONMultiPolygon
+  properties: Record<string, unknown>
+}
 
-                const indices = earcut(flatCoordinates, [], 2);
+interface GeoJSONData {
+  type: 'FeatureCollection'
+  features: GeoJSONFeature[]
+}
 
-                const vertices3D = [];
-                for (let i = 0; i < outerRing.length; i++) {
-                    const [lon, lat] = outerRing[i];
-                    // Place it slightly above the ocean sphere to prevent clipping
-                    const vec = lonLatToVector3(lon, lat, 5.001);
-                    vertices3D.push(vec.x, vec.y, vec.z);
-                }
+// Utility function to convert lat/lon to a 3D vector
+export function lonLatToVector3(
+  lon: number,
+  lat: number,
+  radius = 5
+): THREE.Vector3 {
+  const phi = (90 - lat) * (Math.PI / 180)
+  const theta = (lon + 180) * (Math.PI / 180)
+  const x = -(radius * Math.sin(phi) * Math.cos(theta))
+  const y = radius * Math.cos(phi)
+  const z = radius * Math.sin(phi) * Math.sin(theta)
+  return new THREE.Vector3(x, y, z)
+}
 
-                allVertices.push(...vertices3D);
+// Create points-based landmasses
+export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
+  const pointsGeometry = useMemo(() => {
+    const positions: number[] = []
 
-                for (const index of indices) {
-                    allIndices.push(index + vertexOffset);
-                }
+    data.features.forEach((feature: GeoJSONFeature) => {
+      const polygons =
+        feature.geometry.type === 'Polygon'
+          ? [feature.geometry.coordinates]
+          : feature.geometry.coordinates
 
-                vertexOffset += outerRing.length;
-            });
-        });
+      polygons.forEach((polygon: GeoJSONCoordinate[][]) => {
+        const outerRing = polygon[0]
 
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(allVertices, 3));
-        geometry.setIndex(allIndices);
-        geometry.computeVertexNormals(); // Important for lighting
+        if (outerRing.length < 3) return
 
-        return geometry;
-    }, [data]);
+        // Create dense points along the polygon outline
+        for (let i = 0; i < outerRing.length - 1; i++) {
+          const [lon1, lat1] = outerRing[i]
+          const [lon2, lat2] = outerRing[i + 1] || outerRing[0]
 
-    return (
-            <mesh geometry={landGeometry}>
-                <meshStandardMaterial color="#000000" metalness={0.5} roughness={0.5} />
-            </mesh>
-    );
-};
+          // Add points along the line segment
+          const steps = 10 // Number of points between each coordinate
+          for (let j = 0; j <= steps; j++) {
+            const t = j / steps
+            const lon = lon1 + t * (lon2 - lon1)
+            const lat = lat1 + t * (lat2 - lat1)
+
+            const vec = lonLatToVector3(lon, lat, 5.015)
+            positions.push(vec.x, vec.y, vec.z)
+          }
+        }
+
+        // Fill interior with a grid of points
+        const bounds = {
+          minLon: Math.min(...outerRing.map((p) => p[0])),
+          maxLon: Math.max(...outerRing.map((p) => p[0])),
+          minLat: Math.min(...outerRing.map((p) => p[1])),
+          maxLat: Math.max(...outerRing.map((p) => p[1])),
+        }
+
+        const gridSize = 0.5 // Adjust for density
+        for (let lon = bounds.minLon; lon <= bounds.maxLon; lon += gridSize) {
+          for (let lat = bounds.minLat; lat <= bounds.maxLat; lat += gridSize) {
+            // Simple point-in-polygon check (basic version)
+            let inside = false
+            for (
+              let i = 0, j = outerRing.length - 1;
+              i < outerRing.length;
+              j = i++
+            ) {
+              if (
+                outerRing[i][1] > lat !== outerRing[j][1] > lat &&
+                lon <
+                  ((outerRing[j][0] - outerRing[i][0]) *
+                    (lat - outerRing[i][1])) /
+                    (outerRing[j][1] - outerRing[i][1]) +
+                    outerRing[i][0]
+              ) {
+                inside = !inside
+              }
+            }
+
+            if (inside) {
+              const vec = lonLatToVector3(lon, lat, 5.015)
+              positions.push(vec.x, vec.y, vec.z)
+            }
+          }
+        }
+      })
+    })
+
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute(
+      'position',
+      new THREE.Float32BufferAttribute(positions, 3)
+    )
+    return geometry
+  }, [data.features])
+
+  return (
+    <points geometry={pointsGeometry}>
+      <pointsMaterial color='#eeeeee' size={0.06} sizeAttenuation={true} />
+    </points>
+  )
+}

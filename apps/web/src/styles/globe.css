@@ -1,0 +1,11 @@
+body {
+    @apply m-0 overflow-hidden bg-[#050505] text-[#00ff00] font-mono;
+}
+
+canvas {
+    @apply block;
+}
+
+#loader {
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center;
+}

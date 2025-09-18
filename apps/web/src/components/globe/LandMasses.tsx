@@ -126,7 +126,7 @@ export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
 
   return (
     <points geometry={pointsGeometry}>
-      <pointsMaterial color='#eeeeee' size={0.06} sizeAttenuation={true} />
+      <pointsMaterial color='#00ff00' size={0.06} sizeAttenuation={true} />
     </points>
   )
 }

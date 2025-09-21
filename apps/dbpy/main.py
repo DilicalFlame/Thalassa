@@ -20,7 +20,7 @@ app.add_middleware(
 
 try:
     # Connect in read-only mode for the API server
-    con = duckdb.connect('./LOCAL/Resources/argo.db', read_only=True)
+    con = duckdb.connect('../../LOCAL/Resources/argo.db', read_only=True)
     print("Successfully connected to DuckDB database.")
 except Exception as e:
     print(f"Error connecting to DuckDB: {e}")
@@ -43,7 +43,7 @@ def get_float_path(platform_id: int):
     # The `LIMIT 1` was likely for testing.
     query = """
             SELECT date, lat, lon
-            FROM main.distinct_float_pos
+            FROM main.distinct_float_positions
             WHERE platform_id = ?
             ORDER BY date;
             """
@@ -62,11 +62,11 @@ def get_float_latest_profile(platform_id: int):
     query = """
             WITH LatestDate AS (
                 SELECT MAX(date) AS max_date
-                FROM main.argo2023_slim
+                FROM main.argo2023
                 WHERE platform_id = ?
             )
             SELECT depth_m, temp_c, sal_psu
-            FROM main.argo2023_slim
+            FROM main.argo2023
             WHERE platform_id = ? AND date = (SELECT max_date FROM LatestDate)
             ORDER BY depth_m;
             """
@@ -84,7 +84,7 @@ def get_float_dossier(platform_id: int):
         raise HTTPException(status_code=503, detail="Database connection not available.")
     query = """
             SELECT date, depth_m, temp_c, sal_psu
-            FROM main.argo2023_slim
+            FROM main.argo2023
             WHERE platform_id = ?
             ORDER BY date, depth_m;
             """

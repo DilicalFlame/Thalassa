@@ -1,0 +1,18 @@
+[project]
+name = "llm"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12.6"
+dependencies = [
+    "dotenv>=0.9.9",
+    "duckdb>=1.4.0",
+    "fastapi>=0.117.1",
+    "ipykernel>=6.30.1",
+    "langchain>=0.3.27",
+    "langchain-groq>=0.3.8",
+    "langgraph>=0.6.7",
+    "numpy>=2.3.3",
+    "pandas>=2.3.2",
+    "requests>=2.32.5",
+]

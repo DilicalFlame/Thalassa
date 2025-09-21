@@ -1,6 +1,11 @@
 'use client'
 
-import { PerspectiveCamera, OrthographicCamera, OrbitControls, MapControls } from '@react-three/drei'
+import {
+  PerspectiveCamera,
+  OrthographicCamera,
+  OrbitControls,
+  MapControls,
+} from '@react-three/drei'
 
 interface DynamicCameraProps {
   is3D: boolean
@@ -11,11 +16,7 @@ export const DynamicCamera = ({ is3D }: DynamicCameraProps) => {
     return (
       <>
         {/* The 3D Perspective Camera */}
-        <PerspectiveCamera
-          makeDefault
-          position={[0, 0, 15]}
-          fov={75}
-        />
+        <PerspectiveCamera makeDefault position={[0, 0, 15]} fov={75} />
         {/* Use OrbitControls for proper 3D rotation */}
         <OrbitControls
           enableDamping={true}

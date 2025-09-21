@@ -7,18 +7,15 @@ interface ViewToggleProps {
 
 export const ViewToggle = ({ is3D, setIs3D }: ViewToggleProps) => {
   return (
-    <div className="view-toggle-container">
-      <div className="view-toggle-capsule">
+    <div className='view-toggle-container'>
+      <div className='view-toggle-capsule'>
         <button
           className={!is3D ? 'active' : ''}
           onClick={() => setIs3D(false)}
         >
           2D
         </button>
-        <button
-          className={is3D ? 'active' : ''}
-          onClick={() => setIs3D(true)}
-        >
+        <button className={is3D ? 'active' : ''} onClick={() => setIs3D(true)}>
           3D
         </button>
       </div>

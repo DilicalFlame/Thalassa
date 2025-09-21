@@ -7,12 +7,21 @@ settings:
 importers:
 
   .:
+    dependencies:
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+      prettier-plugin-tailwindcss:
+        specifier: ^0.6.14
+        version: 0.6.14(prettier@3.6.2)
     devDependencies:
       turbo:
         specifier: ^2.5.6
         version: 2.5.6
 
   apps/api: {}
+
+  apps/dbpy: {}
 
   apps/web:
     dependencies:

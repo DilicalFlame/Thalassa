@@ -1,4 +1,3 @@
-// app/components/globe/Scene.tsx
 'use client'
 
 import * as THREE from 'three'
@@ -6,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useRef, useState, useEffect } from 'react'
 import { SolidLandmasses } from '@/components/globe/LandMasses'
+import { FloatDots } from '@/components/globe/FloatDots'
 
 // The main scene component
 export const GlobeScene = () => {
@@ -63,12 +63,13 @@ export const GlobeScene = () => {
         {/* Render components only when data is loaded */}
         {geoData && (
           <>
-            {/* THIS IS THE IMPORTANT PART: We are only rendering the solid mesh */}
+            {/* Landmasses */}
             <SolidLandmasses data={geoData} />
-
-            {/* The CountryOutlines component has been removed */}
           </>
         )}
+
+        {/* Float positions - independent of landmass data */}
+        <FloatDots dotColor='#ffff00' dotSize={0.08} />
       </group>
     </>
   )

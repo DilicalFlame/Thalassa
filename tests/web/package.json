@@ -1,16 +1,16 @@
 {
-  "name": "web-tests",
-  "version": "0.0.0",
-  "description": "",
-  "scripts": {
-    "test": "vitest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/DilicalFlame/Thalassa.git"
-  },
-  "private": true,
-  "devDependencies": {
-    "vitest": "^3.2.4"
-  }
+    "name": "web-tests",
+    "version": "0.0.0",
+    "description": "",
+    "scripts": {
+        "test": "vitest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DilicalFlame/Thalassa.git"
+    },
+    "private": true,
+    "devDependencies": {
+        "vitest": "^3.2.4"
+    }
 }

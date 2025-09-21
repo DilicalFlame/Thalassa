@@ -30,22 +30,38 @@ interface GeoJSONData {
   features: GeoJSONFeature[]
 }
 
-// Utility function to convert lat/lon to a 3D vector
+// Utility function to convert lat/lon to a 3D vector or 2D coordinates
 export function lonLatToVector3(
   lon: number,
   lat: number,
-  radius = 5
+  radius = 5,
+  is3D = true
 ): THREE.Vector3 {
-  const phi = (90 - lat) * (Math.PI / 180)
-  const theta = (lon + 180) * (Math.PI / 180)
-  const x = -(radius * Math.sin(phi) * Math.cos(theta))
-  const y = radius * Math.cos(phi)
-  const z = radius * Math.sin(phi) * Math.sin(theta)
-  return new THREE.Vector3(x, y, z)
+  if (is3D) {
+    const phi = (90 - lat) * (Math.PI / 180)
+    const theta = (lon + 180) * (Math.PI / 180)
+    const x = -(radius * Math.sin(phi) * Math.cos(theta))
+    const y = radius * Math.cos(phi)
+    const z = radius * Math.sin(phi) * Math.sin(theta)
+    return new THREE.Vector3(x, y, z)
+  } else {
+    // For 2D map, use proper Mercator-like projection
+    // Map longitude (-180 to 180) to x (-18 to 18) to fit the 36-unit wide plane
+    const x = (lon / 180) * 18
+    // Map latitude (-90 to 90) to z (-9 to 9) to fit the 18-unit tall plane
+    const z = -(lat / 90) * 9  // Negative to flip north-south orientation
+    return new THREE.Vector3(x, 0.01, z) // Slightly above the plane
+  }
 }
 
 // Create points-based landmasses
-export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
+export const SolidLandmasses = ({
+  data,
+  is3D = true,
+}: {
+  data: GeoJSONData
+  is3D?: boolean
+}) => {
   const pointsGeometry = useMemo(() => {
     const positions: number[] = []
 
@@ -72,7 +88,7 @@ export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
             const lon = lon1 + t * (lon2 - lon1)
             const lat = lat1 + t * (lat2 - lat1)
 
-            const vec = lonLatToVector3(lon, lat, 5.015)
+            const vec = lonLatToVector3(lon, lat, 5.015, is3D)
             positions.push(vec.x, vec.y, vec.z)
           }
         }
@@ -108,7 +124,7 @@ export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
             }
 
             if (inside) {
-              const vec = lonLatToVector3(lon, lat, 5.015)
+              const vec = lonLatToVector3(lon, lat, 5.015, is3D)
               positions.push(vec.x, vec.y, vec.z)
             }
           }
@@ -122,7 +138,7 @@ export const SolidLandmasses = ({ data }: { data: GeoJSONData }) => {
       new THREE.Float32BufferAttribute(positions, 3)
     )
     return geometry
-  }, [data.features])
+  }, [data.features, is3D])
 
   return (
     <points geometry={pointsGeometry}>

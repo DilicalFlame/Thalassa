@@ -15,6 +15,7 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/api/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/apps/web/src/lib" />
       <excludeFolder url="file://$MODULE_DIR$/apps/dbpy/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/dbpy/LOCAL" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

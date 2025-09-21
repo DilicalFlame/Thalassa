@@ -1,4 +1,4 @@
 /* tslint:disable */
 /* eslint-disable */
-export * from './HealthResponse';
-export * from './WelcomeResponse';
+export * from './HealthResponse'
+export * from './WelcomeResponse'

@@ -1,2 +1,6 @@
 @import "tailwindcss";
 @import "../styles/globe.css";
+
+* {
+    user-select: none;
+}

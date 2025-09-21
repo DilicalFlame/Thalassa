@@ -20,7 +20,7 @@ app.add_middleware(
 
 try:
     # Connect in read-only mode for the API server
-    con = duckdb.connect('../../LOCAL/Resources/argo.db', read_only=True)
+    con = duckdb.connect('./LOCAL/Resources/argo.db', read_only=True)
     print("Successfully connected to DuckDB database.")
 except Exception as e:
     print(f"Error connecting to DuckDB: {e}")

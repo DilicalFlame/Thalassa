@@ -6,14 +6,12 @@ import numpy as np
 from typing import List, Dict, Optional
 from io import BytesIO
 import base64
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime
 
-# con = duckdb.connect('../LOCAL/Resources/argo.db', read_only=True)
-# query = """
-#         SELECT * from oceans;
-#         """
-# df = con.execute(query ).fetchdf()
-# print(df)
 class OceanGraphGenerator:
     def __init__(self, db_path: str = '../LOCAL/Resources/argo.db'):
         self.db_path = db_path
@@ -40,47 +38,13 @@ class OceanGraphGenerator:
         result = con.execute(query).fetchall()
         return [str(row[0]) for row in result]
 
-    def get_floater_data(self, platform_id: str) -> pd.DataFrame:
-        con = self.get_connection()
-        query = f"""
-        SELECT * 
-        FROM argo2023_slim 
-        WHERE platform_id = {platform_id}
-        ORDER BY date
-        """
-        return con.execute(query).fetchdf()
-
-    def get_floater_latest_position(self, platform_id: str) -> Dict:
-        con = self.get_connection()
-        query = f"""
-        SELECT platform_id, lat, lon, date
-        FROM argo2023_slim 
-        WHERE platform_id = {platform_id}
-        ORDER BY date DESC
-        LIMIT 1
-        """
-        result = con.execute(query).fetchdf()
-        if not result.empty:
-            return result.iloc[0].to_dict()
-        return {}
-
-    def get_all_floater_positions(self) -> pd.DataFrame:
-        con = self.get_connection()
-        query = """
-                SELECT platform_id, lat, lon, MAX(date) as last_measurement
-                FROM argo2023_slim
-                WHERE lat IS NOT NULL AND lon IS NOT NULL
-                GROUP BY platform_id, lat, lon
-                ORDER BY platform_id \
-                """
-        return con.execute(query).fetchdf()
-
-    def plot_temperature_profile(self, platform_id: str) -> str:
+    def plot_3d_temperature_profile(self, platform_id: str) -> str:
+        """Create 3D temperature profile with time as third dimension"""
         con = self.get_connection()
         query = f"""
         SELECT depth_m, temp_c, date
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND depth_m IS NOT NULL 
         AND temp_c IS NOT NULL
         ORDER BY date, depth_m
@@ -91,22 +55,42 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(10, 8))
-        plt.plot(df['temp_c'], df['depth_m'], 'o-', markersize=3, alpha=0.7,color='blue')
-        plt.gca().invert_yaxis()
-        plt.xlabel('Temperature (°C)')
-        plt.ylabel('Depth (m)')
-        plt.title(f'Temperature Profile - Floater {platform_id}')
-        plt.grid(True, alpha=0.3)
+        # Convert date to numeric for 3D plotting
+        df['date_numeric'] = (df['date'] - df['date'].min()).dt.total_seconds() / 86400  # Days since first measurement
 
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Create scatter plot
+        scatter = ax.scatter(
+            df['temp_c'], df['depth_m'], df['date_numeric'],
+            c=df['depth_m'], cmap='viridis_r', alpha=0.7, s=20
+        )
+
+        ax.set_xlabel('Temperature (°C)', labelpad=15)
+        ax.set_ylabel('Depth (m)', labelpad=15)
+        ax.set_zlabel('Time (days since first measurement)', labelpad=15)
+        ax.set_title(f'3D Temperature Profile - Floater {platform_id}', pad=20)
+
+        # Invert depth axis
+        ax.invert_yaxis()
+
+        # Add colorbar
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        # Adjust viewing angle
+        ax.view_init(elev=20, azim=45)
+        plt.show()
         return self._plot_to_base64()
 
-    def plot_salinity_profile(self, platform_id: str) -> str:
+    def plot_3d_salinity_profile(self, platform_id: str) -> str:
+        """Create 3D salinity profile with time as third dimension"""
         con = self.get_connection()
         query = f"""
         SELECT depth_m, sal_psu, date
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND depth_m IS NOT NULL 
         AND sal_psu IS NOT NULL
         ORDER BY date, depth_m
@@ -117,24 +101,41 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(10, 8))
-        plt.plot(df['sal_psu'], df['depth_m'], 'o-', color='green', markersize=3, alpha=0.7)
-        plt.gca().invert_yaxis()
-        plt.xlabel('Salinity (PSU)')
-        plt.ylabel('Depth (m)')
-        plt.title(f'Salinity Profile - Floater {platform_id}')
-        plt.grid(True, alpha=0.3)
+        # Convert date to numeric for 3D plotting
+        df['date_numeric'] = (df['date'] - df['date'].min()).dt.total_seconds() / 86400
+
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        scatter = ax.scatter(
+            df['sal_psu'], df['depth_m'], df['date_numeric'],
+            c=df['depth_m'], cmap='plasma_r', alpha=0.7, s=20
+        )
+
+        ax.set_xlabel('Salinity (PSU)', labelpad=15)
+        ax.set_ylabel('Depth (m)', labelpad=15)
+        ax.set_zlabel('Time (days since first measurement)', labelpad=15)
+        ax.set_title(f'3D Salinity Profile - Floater {platform_id}', pad=20)
+
+        ax.invert_yaxis()
+
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        ax.view_init(elev=20, azim=45)
+        plt.show()
 
         return self._plot_to_base64()
 
-    def plot_temperature_timeseries(self, platform_id: str) -> str:
+    def plot_3d_temperature_timeseries(self, platform_id: str) -> str:
+        """Create 3D temperature timeseries with depth as third dimension"""
         con = self.get_connection()
         query = f"""
         SELECT date, temp_c, depth_m
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND temp_c IS NOT NULL
-        ORDER BY date
+        ORDER BY date, depth_m
         """
 
         df = con.execute(query).fetchdf()
@@ -142,34 +143,41 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(12, 6))
-        df['depth_category'] = pd.cut(df['depth_m'],
-                                      bins=[0, 50, 200, 500, 1000, 2000],
-                                      labels=['0-50m', '50-200m', '200-500m', '500-1000m', '1000-2000m'])
+        # Convert date to numeric
+        df['date_numeric'] = (df['date'] - df['date'].min()).dt.total_seconds() / 86400
 
-        for depth_cat in df['depth_category'].unique():
-            subset = df[df['depth_category'] == depth_cat]
-            plt.plot(subset['date'], subset['temp_c'], 'o-', label=str(depth_cat), markersize=2, alpha=0.7,color='red')
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
 
-        plt.xlabel('Date')
-        plt.ylabel('Temperature (°C)')
-        plt.title(f'Temperature Time Series - Floater {platform_id}')
-        plt.legend()
-        plt.xticks(rotation=45)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
+        scatter = ax.scatter(
+            df['date_numeric'], df['temp_c'], df['depth_m'],
+            c=df['depth_m'], cmap='coolwarm', alpha=0.7, s=20
+        )
+
+        ax.set_xlabel('Time (days since first measurement)', labelpad=15)
+        ax.set_ylabel('Temperature (°C)', labelpad=15)
+        ax.set_zlabel('Depth (m)', labelpad=15)
+        ax.set_title(f'3D Temperature Time Series - Floater {platform_id}', pad=20)
+
+        ax.invert_zaxis()  # Invert depth axis
+
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        ax.view_init(elev=20, azim=45)
+        plt.show()
 
         return self._plot_to_base64()
 
-    def plot_salinity_timeseries(self, platform_id: str) -> str:
-        """Create salinity timeseries plot for a floater"""
+    def plot_3d_salinity_timeseries(self, platform_id: str) -> str:
+        """Create 3D salinity timeseries with depth as third dimension"""
         con = self.get_connection()
         query = f"""
-        SELECT date, sal_psu, depth_m
+        SELECT date, sal_psu, depth_m,temp_c
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND sal_psu IS NOT NULL
-        ORDER BY date
+        ORDER BY date, depth_m
         """
 
         df = con.execute(query).fetchdf()
@@ -177,32 +185,38 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(12, 6))
+        df['date_numeric'] = (df['date'] - df['date'].min()).dt.total_seconds() / 86400
 
-        df['depth_category'] = pd.cut(df['depth_m'],
-                                      bins=[0, 50, 200, 500, 1000, 2000],
-                                      labels=['0-50m', '50-200m', '200-500m', '500-1000m', '1000-2000m'])
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
 
-        for depth_cat in df['depth_category'].unique():
-            subset = df[df['depth_category'] == depth_cat]
-            plt.plot(subset['date'], subset['sal_psu'], 'o-', label=str(depth_cat), markersize=2, alpha=0.7,color='grey')
+        scatter = ax.scatter(
+            df['date_numeric'], df['sal_psu'], df['temp_c'],
+            c=df['depth_m'], cmap='viridis', alpha=0.7, s=20
+        )
 
-        plt.xlabel('Date')
-        plt.ylabel('Salinity (PSU)')
-        plt.title(f'Salinity Time Series - Floater {platform_id}')
-        plt.legend()
-        plt.xticks(rotation=45)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
+        ax.set_xlabel('Time (days since first measurement)', labelpad=15)
+        ax.set_ylabel('Salinity (PSU)', labelpad=15)
+        ax.set_zlabel('Temperature (°C)', labelpad=15)
+        ax.set_title(f'3D Salinity Time Series - Floater {platform_id}', pad=20)
+
+        ax.invert_zaxis()
+
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        ax.view_init(elev=20, azim=45)
+        plt.show()
 
         return self._plot_to_base64()
 
-    def plot_temperature_salinity(self, platform_id: str) -> str:
+    def plot_3d_temperature_salinity(self, platform_id: str) -> str:
+        """Create 3D T-S diagram with depth as third dimension"""
         con = self.get_connection()
         query = f"""
-        SELECT temp_c, sal_psu, depth_m
+        SELECT temp_c, sal_psu, depth_m, date
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND temp_c IS NOT NULL 
         AND sal_psu IS NOT NULL
         ORDER BY depth_m
@@ -213,22 +227,36 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(10, 8))
-        scatter = plt.scatter(df['sal_psu'], df['temp_c'], c=df['depth_m'],
-                              cmap='viridis_r', alpha=0.7, s=30)
-        plt.colorbar(scatter, label='Depth (m)')
-        plt.xlabel('Salinity (PSU)')
-        plt.ylabel('Temperature (°C)')
-        plt.title(f'T-S Diagram - Floater {platform_id}')
-        plt.grid(True, alpha=0.3)
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        scatter = ax.scatter(
+            df['sal_psu'], df['temp_c'], df['depth_m'],
+            c=df['depth_m'], cmap='viridis_r', alpha=0.7, s=30
+        )
+
+        ax.set_xlabel('Salinity (PSU)', labelpad=15)
+        ax.set_ylabel('Temperature (°C)', labelpad=15)
+        ax.set_zlabel('Depth (m)', labelpad=15)
+        ax.set_title(f'3D T-S Diagram - Floater {platform_id}', pad=20)
+
+        ax.invert_zaxis()
+
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        ax.view_init(elev=20, azim=45)
+        plt.show()
+
         return self._plot_to_base64()
 
-    def plot_floater_trajectory(self, platform_id: str) -> str:
+    def plot_3d_floater_trajectory(self, platform_id: str) -> str:
+        """Create 3D trajectory with time as third dimension"""
         con = self.get_connection()
         query = f"""
-        SELECT lon, lat, date
+        SELECT lon, lat, date, depth_m
         FROM argo2023_slim 
-        WHERE platform_id = {platform_id} 
+        WHERE platform_id = '{platform_id}' 
         AND lat IS NOT NULL 
         AND lon IS NOT NULL
         ORDER BY date
@@ -239,29 +267,88 @@ class OceanGraphGenerator:
         if df.empty:
             return None
 
-        plt.figure(figsize=(12, 8))
-        plt.plot(df['lon'], df['lat'], 'o-', markersize=3, alpha=0.7, linewidth=1)
-        plt.scatter(df['lon'].iloc[0], df['lat'].iloc[0], color='green', s=100, label='Start', zorder=5)
-        plt.scatter(df['lon'].iloc[-1], df['lat'].iloc[-1], color='red', s=100, label='End', zorder=5)
+        # Convert date to numeric
+        df['date_numeric'] = (df['date'] - df['date'].min()).dt.total_seconds() / 86400
 
-        plt.xlabel('Longitude')
-        plt.ylabel('Latitude')
-        plt.title(f'Trajectory - Floater {platform_id}')
-        plt.legend()
-        plt.grid(True, alpha=0.3)
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        scatter = ax.scatter(
+            df['lon'], df['lat'], df['date_numeric'],
+            c=df['depth_m'], cmap='plasma', alpha=0.7, s=30
+        )
+
+        ax.set_xlabel('Longitude', labelpad=15)
+        ax.set_ylabel('Latitude', labelpad=15)
+        ax.set_zlabel('Time (days since first measurement)', labelpad=15)
+        ax.set_title(f'3D Trajectory - Floater {platform_id}', pad=20)
+
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        ax.view_init(elev=20, azim=45)
+        plt.show()
 
         return self._plot_to_base64()
 
-    def get_all_graphs_for_floater(self, platform_id: str) -> Dict[str, str]:
-        """Generate all available graphs for a specific floater"""
+    def plot_3d_tsd_profile(self, platform_id: str) -> str:
+        """Create 3D Temperature-Salinity-Depth profile plot"""
+        con = self.get_connection()
+        query = f"""
+        SELECT temp_c, sal_psu, depth_m, date
+        FROM argo2023_slim 
+        WHERE platform_id = '{platform_id}' 
+        AND temp_c IS NOT NULL 
+        AND sal_psu IS NOT NULL 
+        AND depth_m IS NOT NULL
+        ORDER BY date, depth_m
+        """
+
+        df = con.execute(query).fetchdf()
+
+        if df.empty:
+            return None
+
+        # Create 3D plot
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Scatter plot with color by depth
+        scatter = ax.scatter(
+            df['sal_psu'], df['temp_c'], df['depth_m'],
+            c=df['depth_m'], cmap='viridis_r', alpha=0.7, s=30
+        )
+
+        # Labels and title
+        ax.set_xlabel('Salinity (PSU)', labelpad=15)
+        ax.set_ylabel('Temperature (°C)', labelpad=15)
+        ax.set_zlabel('Depth (m)', labelpad=15)
+        ax.set_title(f'3D T-S-D Profile - Floater {platform_id}', pad=20)
+
+        # Invert depth axis (depth increases downward)
+        ax.invert_zaxis()
+
+        # Add colorbar
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.1)
+        cbar.set_label('Depth (m)')
+
+        # Adjust viewing angle
+        ax.view_init(elev=20, azim=45)
+        plt.show()
+
+        return self._plot_to_base64()
+
+    def get_all_3d_graphs_for_floater(self, platform_id: str) -> Dict[str, str]:
+        """Generate all available 3D graphs for a specific floater"""
         graphs = {}
 
-        graphs['temperature_profile'] = self.plot_temperature_profile(platform_id)
-        graphs['salinity_profile'] = self.plot_salinity_profile(platform_id)
-        graphs['temperature_timeseries'] = self.plot_temperature_timeseries(platform_id)
-        graphs['salinity_timeseries'] = self.plot_salinity_timeseries(platform_id)
-        graphs['ts_diagram'] = self.plot_temperature_salinity(platform_id)
-        graphs['trajectory'] = self.plot_floater_trajectory(platform_id)
+        graphs['3d_temperature_profile'] = self.plot_3d_temperature_profile(platform_id)
+        graphs['3d_salinity_profile'] = self.plot_3d_salinity_profile(platform_id)
+        graphs['3d_temperature_timeseries'] = self.plot_3d_temperature_timeseries(platform_id)
+        graphs['3d_salinity_timeseries'] = self.plot_3d_salinity_timeseries(platform_id)
+        graphs['3d_ts_diagram'] = self.plot_3d_temperature_salinity(platform_id)
+        graphs['3d_trajectory'] = self.plot_3d_floater_trajectory(platform_id)
+        graphs['3d_tsd_profile'] = self.plot_3d_tsd_profile(platform_id)
 
         # Remove None values (graphs that couldn't be created)
         return {k: v for k, v in graphs.items() if v is not None}
@@ -277,11 +364,11 @@ class OceanGraphGenerator:
         return image_base64
 
 # Utility functions for easy usage
-def create_floater_graphs(platform_id: str, db_path: str = '../LOCAL/Resources/argo.db') -> Dict[str, str]:
-    """Convenience function to create all graphs for a floater"""
+def create_3d_floater_graphs(platform_id: str, db_path: str = '../LOCAL/Resources/argo.db') -> Dict[str, str]:
+    """Convenience function to create all 3D graphs for a floater"""
     generator = OceanGraphGenerator(db_path)
     try:
-        return generator.get_all_graphs_for_floater(platform_id)
+        return generator.get_all_3d_graphs_for_floater(platform_id)
     finally:
         generator.close_connection()
 
@@ -295,7 +382,7 @@ def get_available_floater_ids(db_path: str = '../LOCAL/Resources/argo.db') -> Li
 
 # Example usage
 if __name__ == "__main__":
-    # Test the functions
+    # Test the 3D functions
     generator = OceanGraphGenerator()
 
     # Get all available floater IDs
@@ -305,14 +392,13 @@ if __name__ == "__main__":
     if floater_ids:
         # Test with first floater
         test_floater = floater_ids[0]
-        print(f"\nGenerating graphs for floater: {test_floater}")
+        print(f"\nGenerating 3D graphs for floater: {test_floater}")
 
-        # Get all graphs
-        graphs = generator.get_all_graphs_for_floater(test_floater)
-        print(f"Generated {len(graphs)} graphs")
+        # Get all 3D graphs
+        graphs_3d = generator.get_all_3d_graphs_for_floater(test_floater)
+        print(f"Generated {len(graphs_3d)} 3D graphs")
 
-        # Show available graph types
-        print("Available graphs:", list(graphs.keys()))
-
+        # Show available 3D graph types
+        print("Available 3D graphs:", list(graphs_3d.keys()))
 
     generator.close_connection()

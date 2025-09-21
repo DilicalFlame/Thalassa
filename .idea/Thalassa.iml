@@ -2,7 +2,7 @@
 <module type="WEB_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python facet">
-      <configuration sdkName="Python 3.12 virtualenv at D:\Thalassa\apps\dbpy\.venv" />
+      <configuration sdkName="Python 3.12 virtualenv at D:\Thalassa\apps\llm\.venv" />
     </facet>
   </component>
   <component name="NewModuleRootManager">
@@ -16,9 +16,10 @@
       <excludeFolder url="file://$MODULE_DIR$/apps/web/src/lib" />
       <excludeFolder url="file://$MODULE_DIR$/apps/dbpy/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/apps/dbpy/LOCAL" />
+      <excludeFolder url="file://$MODULE_DIR$/apps/llm/.venv" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Python 3.12 virtualenv at D:\Thalassa\apps\dbpy\.venv interpreter library" level="application" />
+    <orderEntry type="library" name="Python 3.12 virtualenv at D:\Thalassa\apps\llm\.venv interpreter library" level="application" />
   </component>
 </module>

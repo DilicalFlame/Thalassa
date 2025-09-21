@@ -12,7 +12,7 @@ interface UnifiedSceneProps {
 
 export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
   const [geoData, setGeoData] = useState(null)
-  const globeGroupRef = useRef<THREE.Group>(null)
+  const globeGroupRef = useRef<THREE.Group>(null!) // Use non-null assertion
 
   useEffect(() => {
     fetch(
@@ -23,17 +23,34 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
       .catch((error) => console.error('Failed to load geographic data:', error))
   }, [])
 
-  // Only rotate in 3D mode
-  useFrame(() => {
+  // --- THE FIX ---
+  // This effect runs whenever the is3D mode changes.
+  useEffect(() => {
+    if (globeGroupRef.current) {
+      if (!is3D) {
+        // When switching to 2D, immediately reset the group's rotation.
+        globeGroupRef.current.rotation.set(0, 0, 0)
+      }
+    }
+  }, [is3D]) // Dependency array ensures this runs only when is3D changes.
+
+  // The autorotation logic
+  useFrame((_, delta) => {
     if (globeGroupRef.current && is3D) {
-      globeGroupRef.current.rotation.y += 0.0005
+      // Rotate slowly
+      globeGroupRef.current.rotation.y += delta * 0.05 // Use delta for frame-rate independence
     }
   })
+
+  // --- THE FIX: DYNAMIC DOT SIZE ---
+  // Define a different size for each camera projection.
+  // These values might need tweaking for the perfect look.
+  const dynamicDotSize = is3D ? 0.08 : 20
 
   return (
     <>
       <ambientLight intensity={2.5} />
-      
+
       <group ref={globeGroupRef}>
         {is3D ? (
           // 3D Globe rendering
@@ -60,7 +77,7 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
             </mesh>
           </>
         ) : (
-          // 2D Map rendering - flat plane with better positioning
+          // 2D Map rendering - flat plane
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
             <planeGeometry args={[36, 18]} />
             <meshStandardMaterial
@@ -71,13 +88,15 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
           </mesh>
         )}
 
-        {/* Render landmasses and data - same for both views */}
-        {geoData && (
-          <SolidLandmasses data={geoData} is3D={is3D} />
-        )}
+        {/* Render landmasses and data - this works for both views now */}
+        {geoData && <SolidLandmasses data={geoData} is3D={is3D} />}
 
-        {/* Float positions - same data, different positioning based on view */}
-        <FloatDots dotColor='#ffff00' dotSize={0.08} is3D={is3D} />
+        <FloatDots
+          key={is3D ? '3d-dots' : '2d-dots'}
+          dotColor='#ffff00'
+          dotSize={dynamicDotSize}
+          is3D={is3D}
+        />
       </group>
     </>
   )

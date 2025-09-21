@@ -49,7 +49,7 @@ export function lonLatToVector3(
     // Map longitude (-180 to 180) to x (-18 to 18) to fit the 36-unit wide plane
     const x = (lon / 180) * 18
     // Map latitude (-90 to 90) to z (-9 to 9) to fit the 18-unit tall plane
-    const z = -(lat / 90) * 9  // Negative to flip north-south orientation
+    const z = -(lat / 90) * 9 // Negative to flip north-south orientation
     return new THREE.Vector3(x, 0.01, z) // Slightly above the plane
   }
 }

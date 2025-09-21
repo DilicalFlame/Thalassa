@@ -1,7 +1,8 @@
 'use client'
 
 import * as THREE from 'three'
-import { useMemo, useState, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { lonLatToVector3 } from './LandMasses'
 
 interface FloatPosition {
@@ -29,6 +30,32 @@ export const FloatDots = ({
   const [floatData, setFloatData] = useState<FloatPosition[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentZoom, setCurrentZoom] = useState(1)
+
+  const { camera } = useThree()
+  const materialRef = useRef<THREE.PointsMaterial>(null)
+
+  // Single function to calculate dot size based on zoom - DRY principle
+  const calculateDotSize = (zoom: number) => {
+    const ZOOM_SCALE_FACTOR = 120 // Single place to adjust zoom sensitivity
+    return dotSize * (zoom / ZOOM_SCALE_FACTOR)
+  }
+
+  // Track zoom changes in real-time
+  useFrame(() => {
+    if (!is3D && camera instanceof THREE.OrthographicCamera) {
+      const newZoom = camera.zoom
+      if (newZoom !== currentZoom) {
+        setCurrentZoom(newZoom)
+        // Update material size directly for better performance
+        // Higher zoom = closer = bigger dots, Lower zoom = farther = smaller dots
+        if (materialRef.current) {
+          materialRef.current.size = calculateDotSize(newZoom)
+          materialRef.current.needsUpdate = true
+        }
+      }
+    }
+  })
 
   useEffect(() => {
     const fetchFloatData = async () => {
@@ -84,7 +111,6 @@ export const FloatDots = ({
 
     if (ctx) {
       const center = canvasSize / 2
-      const radius = center
       // Create a circular gradient
       const gradient = ctx.createRadialGradient(
         center,
@@ -92,7 +118,7 @@ export const FloatDots = ({
         0,
         center,
         center,
-        radius
+        center
       )
       gradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
       gradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.8)')
@@ -123,17 +149,29 @@ export const FloatDots = ({
     return geometry
   }, [floatData, is3D]) // Add is3D to dependencies
 
-  if (loading) return null // Or return a cool loading spinner component
-  if (error) return null // Or return an error message component
+  // Calculate initial size for 2D mode
+  const initialDotSize = useMemo(() => {
+    if (is3D) {
+      return dotSize
+    } else {
+      // Initial size for 2D based on current zoom
+      const orthoCam = camera as THREE.OrthographicCamera
+      const zoom = orthoCam.zoom || 1
+      return calculateDotSize(zoom)
+    }
+  }, [dotSize, is3D, camera])
+
+  if (loading) return null
+  if (error) return null
   if (!floatGeometry) return null
 
-  // The rendering part is already efficient for this number of dots.
   return (
     <points geometry={floatGeometry}>
       <pointsMaterial
+        ref={materialRef}
         color={dotColor}
-        size={dotSize} // Removed the multiplication - circleRadius should control texture, not size
-        sizeAttenuation={true}
+        size={initialDotSize}
+        sizeAttenuation={is3D}
         transparent={true}
         alphaTest={0.5}
         map={circleTexture}

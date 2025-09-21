@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 
 // Dynamically import the MapViewer component with SSR disabled
 const MapViewer = dynamic(
-  () => import('../components/flatmap/MapViewer').then((mod) => mod.MapViewer),
+  () => import('../components/MapViewer').then((mod) => mod.MapViewer),
   {
     ssr: false,
     loading: () => (

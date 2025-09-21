@@ -19,9 +19,19 @@ interface GeoJSONMultiPolygon {
   coordinates: GeoJSONCoordinate[][][]
 }
 
+interface GeoJSONLineString {
+  type: 'LineString'
+  coordinates: GeoJSONCoordinate[]
+}
+
+interface GeoJSONMultiLineString {
+  type: 'MultiLineString'
+  coordinates: GeoJSONCoordinate[][]
+}
+
 interface GeoJSONFeature {
   type: 'Feature'
-  geometry: GeoJSONPolygon | GeoJSONMultiPolygon
+  geometry: GeoJSONPolygon | GeoJSONMultiPolygon | GeoJSONLineString | GeoJSONMultiLineString
   properties: Record<string, unknown>
 }
 
@@ -65,71 +75,112 @@ export const SolidLandmasses = ({
   const pointsGeometry = useMemo(() => {
     const positions: number[] = []
 
-    data.features.forEach((feature: GeoJSONFeature) => {
-      const polygons =
-        feature.geometry.type === 'Polygon'
-          ? [feature.geometry.coordinates]
-          : feature.geometry.coordinates
+    data.features.forEach((feature: GeoJSONFeature, featureIndex: number) => {
+      // Handle different geometry types
+      if (feature.geometry.type === 'LineString') {
+        // Handle LineString geometry (common in coastline data)
+        const coords = feature.geometry.coordinates as number[][]
+        if (Array.isArray(coords) && coords.length > 2) {
+          // Treat LineString as coastline points
+          for (let i = 0; i < coords.length - 1; i++) {
+            const [lon1, lat1] = coords[i]
+            const [lon2, lat2] = coords[i + 1]
 
-      polygons.forEach((polygon: GeoJSONCoordinate[][]) => {
-        const outerRing = polygon[0]
+            // Skip invalid coordinates
+            if (typeof lon1 !== 'number' || typeof lat1 !== 'number') continue
 
-        if (outerRing.length < 3) return
+            // Add points along the line segment
+            const steps = 3 // Optimized for performance
+            for (let j = 0; j <= steps; j++) {
+              const t = j / steps
+              const lon = lon1 + t * (lon2 - lon1)
+              const lat = lat1 + t * (lat2 - lat1)
 
-        // Create dense points along the polygon outline
-        for (let i = 0; i < outerRing.length - 1; i++) {
-          const [lon1, lat1] = outerRing[i]
-          const [lon2, lat2] = outerRing[i + 1] || outerRing[0]
-
-          // Add points along the line segment
-          const steps = 10 // Number of points between each coordinate
-          for (let j = 0; j <= steps; j++) {
-            const t = j / steps
-            const lon = lon1 + t * (lon2 - lon1)
-            const lat = lat1 + t * (lat2 - lat1)
-
-            const vec = lonLatToVector3(lon, lat, 5.015, is3D)
-            positions.push(vec.x, vec.y, vec.z)
-          }
-        }
-
-        // Fill interior with a grid of points
-        const bounds = {
-          minLon: Math.min(...outerRing.map((p) => p[0])),
-          maxLon: Math.max(...outerRing.map((p) => p[0])),
-          minLat: Math.min(...outerRing.map((p) => p[1])),
-          maxLat: Math.max(...outerRing.map((p) => p[1])),
-        }
-
-        const gridSize = 0.5 // Adjust for density
-        for (let lon = bounds.minLon; lon <= bounds.maxLon; lon += gridSize) {
-          for (let lat = bounds.minLat; lat <= bounds.maxLat; lat += gridSize) {
-            // Simple point-in-polygon check (basic version)
-            let inside = false
-            for (
-              let i = 0, j = outerRing.length - 1;
-              i < outerRing.length;
-              j = i++
-            ) {
-              if (
-                outerRing[i][1] > lat !== outerRing[j][1] > lat &&
-                lon <
-                  ((outerRing[j][0] - outerRing[i][0]) *
-                    (lat - outerRing[i][1])) /
-                    (outerRing[j][1] - outerRing[i][1]) +
-                    outerRing[i][0]
-              ) {
-                inside = !inside
-              }
-            }
-
-            if (inside) {
               const vec = lonLatToVector3(lon, lat, 5.015, is3D)
               positions.push(vec.x, vec.y, vec.z)
             }
           }
         }
-      })
+        return // Skip the polygon processing for LineString
+      } else if (feature.geometry.type === 'MultiLineString') {
+        // Handle MultiLineString geometry
+        const multiCoords = feature.geometry.coordinates as number[][][]
+        if (Array.isArray(multiCoords)) {
+          multiCoords.forEach((lineCoords) => {
+            if (Array.isArray(lineCoords) && lineCoords.length > 1) {
+              for (let i = 0; i < lineCoords.length - 1; i++) {
+                const [lon1, lat1] = lineCoords[i]
+                const [lon2, lat2] = lineCoords[i + 1]
+
+                // Skip invalid coordinates
+                if (typeof lon1 !== 'number' || typeof lat1 !== 'number') continue
+
+                // Add points along the line segment
+                const steps = 2 // Optimized for performance
+                for (let j = 0; j <= steps; j++) {
+                  const t = j / steps
+                  const lon = lon1 + t * (lon2 - lon1)
+                  const lat = lat1 + t * (lat2 - lat1)
+
+                  const vec = lonLatToVector3(lon, lat, 5.015, is3D)
+                  positions.push(vec.x, vec.y, vec.z)
+                }
+              }
+            }
+          })
+        }
+        return // Skip the polygon processing for MultiLineString
+      } else if (feature.geometry.type === 'Polygon') {
+        const coordinatesArray = [feature.geometry.coordinates]
+        // Process polygons normally
+        coordinatesArray.forEach((polygon: GeoJSONCoordinate[][]) => {
+          if (!Array.isArray(polygon) || polygon.length === 0) return
+          
+          const outerRing = polygon[0]
+          if (!Array.isArray(outerRing) || outerRing.length < 3) return
+
+          // Create points along the polygon outline
+          for (let i = 0; i < outerRing.length - 1; i++) {
+            const [lon1, lat1] = outerRing[i]
+            const [lon2, lat2] = outerRing[i + 1] || outerRing[0]
+
+            const steps = 5
+            for (let j = 0; j <= steps; j++) {
+              const t = j / steps
+              const lon = lon1 + t * (lon2 - lon1)
+              const lat = lat1 + t * (lat2 - lat1)
+
+              const vec = lonLatToVector3(lon, lat, 5.015, is3D)
+              positions.push(vec.x, vec.y, vec.z)
+            }
+          }
+        })
+      } else if (feature.geometry.type === 'MultiPolygon') {
+        const coordinatesArray = feature.geometry.coordinates
+        // Process multi-polygons normally
+        coordinatesArray.forEach((polygon: GeoJSONCoordinate[][]) => {
+          if (!Array.isArray(polygon) || polygon.length === 0) return
+          
+          const outerRing = polygon[0]
+          if (!Array.isArray(outerRing) || outerRing.length < 3) return
+
+          // Create points along the polygon outline
+          for (let i = 0; i < outerRing.length - 1; i++) {
+            const [lon1, lat1] = outerRing[i]
+            const [lon2, lat2] = outerRing[i + 1] || outerRing[0]
+
+            const steps = 5
+            for (let j = 0; j <= steps; j++) {
+              const t = j / steps
+              const lon = lon1 + t * (lon2 - lon1)
+              const lat = lat1 + t * (lat2 - lat1)
+
+              const vec = lonLatToVector3(lon, lat, 5.015, is3D)
+              positions.push(vec.x, vec.y, vec.z)
+            }
+          }
+        })
+      }
     })
 
     const geometry = new THREE.BufferGeometry()
@@ -142,7 +193,11 @@ export const SolidLandmasses = ({
 
   return (
     <points geometry={pointsGeometry}>
-      <pointsMaterial color='#00ff00' size={0.06} sizeAttenuation={true} />
+      <pointsMaterial 
+        color={is3D ? '#66ff66' : '#88ff88'} 
+        size={is3D ? 0.08 : 0.15} 
+        sizeAttenuation={!is3D} 
+      />
     </points>
   )
 }

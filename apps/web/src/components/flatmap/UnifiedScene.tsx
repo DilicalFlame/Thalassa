@@ -4,26 +4,38 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
 import { SolidLandmasses } from '@/components/globe/LandMasses'
-import { FloatDots } from '@/components/globe/FloatDots'
+import { FloatDots } from '@/components/floats/FloatDots'
 
 interface UnifiedSceneProps {
   is3D: boolean
+  isAutoRotating: boolean
+  onFloatClick: (platformId: number) => void
+  selectedFloatId?: number | null // Add this prop to pass through to FloatDots
 }
 
-export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
+export const UnifiedScene = ({
+  is3D,
+  isAutoRotating,
+  onFloatClick,
+  selectedFloatId = null, // Add this parameter
+}: UnifiedSceneProps) => {
   const [geoData, setGeoData] = useState(null)
   const globeGroupRef = useRef<THREE.Group>(null!) // Use non-null assertion
 
   useEffect(() => {
-    fetch(
-      'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson'
-    )
-      .then((res) => res.json())
-      .then((data) => setGeoData(data))
+    fetch('/coastlines_only_50m.geojson')
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`)
+        }
+        return res.json()
+      })
+      .then((data) => {
+        setGeoData(data)
+      })
       .catch((error) => console.error('Failed to load geographic data:', error))
   }, [])
 
-  // --- THE FIX ---
   // This effect runs whenever the is3D mode changes.
   useEffect(() => {
     if (globeGroupRef.current) {
@@ -36,16 +48,15 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
 
   // The autorotation logic
   useFrame((_, delta) => {
-    if (globeGroupRef.current && is3D) {
+    if (globeGroupRef.current && is3D && isAutoRotating) {
       // Rotate slowly
       globeGroupRef.current.rotation.y += delta * 0.05 // Use delta for frame-rate independence
     }
   })
 
-  // --- THE FIX: DYNAMIC DOT SIZE ---
   // Define a different size for each camera projection.
   // These values might need tweaking for the perfect look.
-  const dynamicDotSize = is3D ? 0.08 : 20
+  const dynamicDotSize = is3D ? 0.2 : 15
 
   return (
     <>
@@ -59,7 +70,7 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
             <mesh>
               <sphereGeometry args={[4.99, 64, 64]} />
               <meshStandardMaterial
-                color='#0066cc'
+                color='#444444'
                 metalness={0.2}
                 roughness={0.8}
               />
@@ -81,7 +92,7 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
             <planeGeometry args={[36, 18]} />
             <meshStandardMaterial
-              color='#0066cc'
+              color='#444444'
               metalness={0.2}
               roughness={0.8}
             />
@@ -96,6 +107,8 @@ export const UnifiedScene = ({ is3D }: UnifiedSceneProps) => {
           dotColor='#ffff00'
           dotSize={dynamicDotSize}
           is3D={is3D}
+          onFloatClick={onFloatClick}
+          selectedFloatId={selectedFloatId}
         />
       </group>
     </>

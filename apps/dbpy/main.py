@@ -78,8 +78,26 @@ def get_float_latest_profile(platform_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
+@app.get("/api/float/{platform_id}/dossier")
+def get_float_dossier(platform_id: int):
+    if not con:
+        raise HTTPException(status_code=503, detail="Database connection not available.")
+    query = """
+            SELECT date, depth_m, temp_c, sal_psu
+            FROM main.argo2023_slim
+            WHERE platform_id = ?
+            ORDER BY date, depth_m;
+            """
+    try:
+        df = con.execute(query, [platform_id]).fetchdf()
+        if df.empty:
+            raise HTTPException(status_code=404, detail=f"Dossier data for float ID {platform_id} not found.")
+        df['date'] = df['date'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        return df.to_dict(orient='records')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-# --- THE OPTIMIZED ENDPOINT ---
+# floats in a bounding box
 @app.get("/api/floats_in_box")
 def get_floats_in_box(
         min_lat: float = Query(..., description="Minimum latitude"),
@@ -110,7 +128,6 @@ def get_floats_in_box(
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 
-# ... (get_all_platform_ids endpoint remains the same) ...
 @app.get("/api/float/all/platform_id")
 def get_all_platform_ids():
     if not con:

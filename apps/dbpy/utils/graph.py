@@ -1,16 +1,10 @@
+import base64
+from io import BytesIO
+from typing import List, Dict
+
 import duckdb
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Optional
-from io import BytesIO
-import base64
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-from mpl_toolkits.mplot3d import Axes3D
-from datetime import datetime
+
 
 class OceanGraphGenerator:
     def __init__(self, db_path: str = '../LOCAL/Resources/argo.db'):

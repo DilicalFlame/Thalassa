@@ -3,7 +3,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useState } from 'react'
 import { ViewToggle } from './flatmap/ViewToggle'
-import { DynamicCamera } from './flatmap/DynamicCamera'
+import { DynamicCamera } from './DynamicCamera'
 import { UnifiedScene } from './flatmap/UnifiedScene'
 
 const Loader = () => {

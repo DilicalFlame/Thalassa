@@ -1,9 +1,9 @@
 'use client'
 
 import * as THREE from 'three'
-import {useEffect, useMemo, useRef, useState} from 'react'
-import {useFrame, useThree} from '@react-three/fiber'
-import {lonLatToVector3} from './LandMasses'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { lonLatToVector3 } from './LandMasses'
 
 interface FloatPosition {
   platform_id: number
@@ -111,7 +111,7 @@ export const FloatDots = ({
 
     if (ctx) {
       const center = canvasSize / 2
-        // Create a circular gradient
+      // Create a circular gradient
       const gradient = ctx.createRadialGradient(
         center,
         center,

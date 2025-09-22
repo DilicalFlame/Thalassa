@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage
 import duckdb
 import uuid
 
-DB_PATH = "./LOCAL/Resources/argo.db"
+DB_PATH = "LOCAL/Resources/argo-old-2.db"
 
 # ---------- Ensure DB + Tables ----------
 conn = duckdb.connect(DB_PATH)

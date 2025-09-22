@@ -11,7 +11,7 @@ from langgraph.graph import StateGraph, END
 # New imports for memory
 from langchain.memory import ConversationSummaryBufferMemory
 
-__DB_PATH = "./LOCAL/Resources/argo.db"
+__DB_PATH = "LOCAL/Resources/argo.db"
 
 # ===============================
 # 1. SETUP: Model and Tools
@@ -69,10 +69,11 @@ system_prompt = f"""
 You are a world-class oceanographic data analyst and an expert in DuckDB SQL.
 
 **Schema**
-- Only use the tables `argo2023` and `argo2024` with these columns:
+- Only use the tables `argo2022`, `argo2023` and `argo2024` with these columns:
 {db_schema}
 
 **Query Rules**
+- Each table consists data for that year only. Use the tables accordingly. Example: If user asks for data info between 2022 and 2024, then use all the three tables and look for the specific dates in the respective tables.
 - For aggregates (AVG, SUM, MIN, MAX):
   - Always include `IS NOT NULL` and 'NOT ISNAN()' on the aggregated column.
   - You may add additional conditions (e.g., region_name, lat/lon ranges, date/month).

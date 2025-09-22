@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import ChatSidebar from './ChatSidebar'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
+import DarkModeToggle from '../DarkModeToggle'
 import { chatService } from '@/services/chatService'
 import type { Session, Message } from '@/types/chat'
 
@@ -138,7 +140,7 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className='flex h-screen bg-gradient-to-b from-slate-50 to-cyan-50'>
+    <div className='flex h-screen bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'>
       {/* Sidebar */}
       <ChatSidebar
         sessions={sessions}
@@ -151,13 +153,13 @@ export default function ChatInterface() {
       />
 
       {/* Main Chat Area */}
-      <div className='flex flex-1 flex-col'>
+      <div className='relative flex flex-1 flex-col'>
         {/* Header */}
-        <div className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm'>
+        <div className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm dark:border-slate-600 dark:from-slate-700 dark:to-slate-600'>
           <div className='flex items-center space-x-3'>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className='rounded-md p-2 text-white hover:bg-blue-700 lg:hidden'
+              className='rounded-md p-2 text-white hover:bg-blue-700 lg:hidden dark:hover:bg-slate-600'
             >
               <svg
                 className='h-5 w-5'
@@ -177,72 +179,24 @@ export default function ChatInterface() {
               {currentSession ? 'Argo AI Chat' : 'Select or Create a Session'}
             </h1>
           </div>
-          <div className='flex items-center space-x-2'>
-            {connectionError ? (
-              <>
-                <span className='inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800'>
-                  <svg
-                    className='mr-1 h-3 w-3'
-                    fill='currentColor'
-                    viewBox='0 0 8 8'
-                  >
-                    <circle cx={4} cy={4} r={3} />
-                  </svg>
-                  Disconnected
-                </span>
-                <button
-                  onClick={loadSessions}
-                  className='rounded-md p-1 text-sm text-white hover:bg-blue-700'
-                  title='Retry connection'
-                >
-                  <svg
-                    className='h-4 w-4'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-                    />
-                  </svg>
-                </button>
-              </>
-            ) : isConnected ? (
-              <span className='inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800'>
-                <svg
-                  className='mr-1 h-3 w-3'
-                  fill='currentColor'
-                  viewBox='0 0 8 8'
-                >
-                  <circle cx={4} cy={4} r={3} />
-                </svg>
-                Connected
-              </span>
-            ) : (
-              <span className='inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800'>
-                <svg
-                  className='mr-1 h-3 w-3'
-                  fill='currentColor'
-                  viewBox='0 0 8 8'
-                >
-                  <circle cx={4} cy={4} r={3} />
-                </svg>
-                Connecting...
-              </span>
-            )}
+          <div className='flex items-center space-x-4'>
+            <Link
+              href='/'
+              className='rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20'
+            >
+              Map
+            </Link>
+            <DarkModeToggle />
           </div>
         </div>
 
         {/* Connection Error Banner */}
         {connectionError && (
-          <div className='border-b border-red-200 bg-red-50 p-4'>
+          <div className='border-b border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center'>
                 <svg
-                  className='mr-3 h-5 w-5 text-red-400'
+                  className='mr-3 h-5 w-5 text-red-400 dark:text-red-500'
                   fill='currentColor'
                   viewBox='0 0 20 20'
                 >
@@ -253,22 +207,24 @@ export default function ChatInterface() {
                   />
                 </svg>
                 <div>
-                  <h3 className='text-sm font-medium text-red-800'>
+                  <h3 className='text-sm font-medium text-red-800 dark:text-red-200'>
                     Connection Error
                   </h3>
-                  <p className='text-sm text-red-700'>{connectionError}</p>
+                  <p className='text-sm text-red-700 dark:text-red-300'>
+                    {connectionError}
+                  </p>
                 </div>
               </div>
               <div className='flex space-x-2'>
                 <button
                   onClick={loadSessions}
-                  className='rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200'
+                  className='rounded-md bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200 dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70'
                 >
                   Retry
                 </button>
                 <button
                   onClick={() => setConnectionError(null)}
-                  className='rounded-md p-1 text-red-400 hover:text-red-600'
+                  className='rounded-md p-1 text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-300'
                 >
                   <svg
                     className='h-4 w-4'
@@ -294,9 +250,9 @@ export default function ChatInterface() {
           ) : (
             <div className='flex h-full items-center justify-center text-center'>
               <div className='max-w-md'>
-                <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-blue-200'>
+                <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-blue-200 dark:from-slate-700 dark:to-slate-600'>
                   <svg
-                    className='h-8 w-8 text-blue-600'
+                    className='h-8 w-8 text-blue-600 dark:text-blue-400'
                     fill='none'
                     stroke='currentColor'
                     viewBox='0 0 24 24'
@@ -309,16 +265,16 @@ export default function ChatInterface() {
                     />
                   </svg>
                 </div>
-                <h3 className='mb-2 text-lg font-medium text-slate-800'>
+                <h3 className='mb-2 text-lg font-medium text-slate-800 dark:text-slate-200'>
                   Welcome to Argo AI
                 </h3>
-                <p className='mb-4 text-slate-600'>
+                <p className='mb-4 text-slate-600 dark:text-slate-400'>
                   Start a conversation about oceanographic data. Ask questions
                   about Argo floats, temperature, salinity, and more.
                 </p>
                 <button
                   onClick={createNewSession}
-                  className='inline-flex items-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                  className='inline-flex items-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:from-blue-700 dark:to-cyan-700 dark:hover:from-blue-800 dark:hover:to-cyan-800'
                 >
                   Start New Chat
                 </button>
@@ -331,6 +287,65 @@ export default function ChatInterface() {
         {currentSession && (
           <ChatInput onSendMessage={sendMessage} disabled={isLoading} />
         )}
+
+        {/* Connection Status - Bottom Right */}
+        <div className='absolute bottom-6 right-6 z-20'>
+          {connectionError ? (
+            <div className='flex items-center space-x-2'>
+              <span className='inline-flex items-center rounded-full bg-red-100 px-3 py-1.5 text-xs font-medium text-red-800 shadow-lg dark:bg-red-900/30 dark:text-red-300'>
+                <svg
+                  className='mr-1.5 h-3 w-3'
+                  fill='currentColor'
+                  viewBox='0 0 8 8'
+                >
+                  <circle cx={4} cy={4} r={3} />
+                </svg>
+                Disconnected
+              </span>
+              <button
+                onClick={loadSessions}
+                className='rounded-md bg-red-100 p-2 text-sm text-red-800 shadow-lg hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
+                title='Retry connection'
+              >
+                <svg
+                  className='h-4 w-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                  />
+                </svg>
+              </button>
+            </div>
+          ) : isConnected ? (
+            <span className='inline-flex items-center rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-800 shadow-lg dark:bg-emerald-900/30 dark:text-emerald-300'>
+              <svg
+                className='mr-1.5 h-3 w-3'
+                fill='currentColor'
+                viewBox='0 0 8 8'
+              >
+                <circle cx={4} cy={4} r={3} />
+              </svg>
+              Connected
+            </span>
+          ) : (
+            <span className='inline-flex items-center rounded-full bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 shadow-lg dark:bg-amber-900/30 dark:text-amber-300'>
+              <svg
+                className='mr-1.5 h-3 w-3'
+                fill='currentColor'
+                viewBox='0 0 8 8'
+              >
+                <circle cx={4} cy={4} r={3} />
+              </svg>
+              Connecting...
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -32,9 +32,9 @@ export default function ChatMessages({
   return (
     <div className='chat-scrollbar h-full flex-1 space-y-6 overflow-y-auto p-4'>
       {messages.length === 0 && !isLoading ? (
-        <div className='py-12 text-center text-slate-500'>
+        <div className='py-12 text-center text-slate-500 dark:text-slate-400'>
           <svg
-            className='mx-auto mb-4 h-16 w-16 text-cyan-300'
+            className='mx-auto mb-4 h-16 w-16 text-cyan-300 dark:text-cyan-600'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -46,10 +46,10 @@ export default function ChatMessages({
               d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
             />
           </svg>
-          <p className='mb-2 text-lg font-medium text-slate-700'>
+          <p className='mb-2 text-lg font-medium text-slate-700 dark:text-slate-300'>
             Start the conversation
           </p>
-          <p className='text-slate-500'>
+          <p className='text-slate-500 dark:text-slate-400'>
             Ask me anything about oceanographic data, Argo floats, or marine
             science!
           </p>
@@ -72,7 +72,7 @@ export default function ChatMessages({
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                       message.role === 'user'
                         ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white'
-                        : 'bg-gradient-to-br from-slate-100 to-cyan-100 text-slate-600'
+                        : 'bg-gradient-to-br from-slate-100 to-cyan-100 text-slate-600 dark:from-slate-700 dark:to-slate-600 dark:text-slate-300'
                     } `}
                   >
                     {message.role === 'user' ? (
@@ -107,7 +107,7 @@ export default function ChatMessages({
                     className={`chat-message max-w-full select-text rounded-lg px-4 py-3 shadow-sm ${
                       message.role === 'user'
                         ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
-                        : 'border border-cyan-200 bg-gradient-to-br from-white to-cyan-50 text-slate-900'
+                        : 'border border-cyan-200 bg-gradient-to-br from-white to-cyan-50 text-slate-900 dark:border-slate-600 dark:from-slate-800 dark:to-slate-700 dark:text-slate-100'
                     } `}
                   >
                     <div className='select-text whitespace-pre-wrap break-words'>
@@ -120,7 +120,7 @@ export default function ChatMessages({
                   </div>
                   {message.created_at && (
                     <div
-                      className={`mt-1 px-1 text-xs text-gray-500 ${message.role === 'user' ? 'text-right' : 'text-left'} `}
+                      className={`mt-1 px-1 text-xs text-gray-500 dark:text-gray-400 ${message.role === 'user' ? 'text-right' : 'text-left'} `}
                     >
                       {formatTime(message.created_at)}
                     </div>
@@ -135,7 +135,7 @@ export default function ChatMessages({
             <div className='flex justify-start'>
               <div className='flex max-w-3xl'>
                 <div className='mr-3 flex-shrink-0'>
-                  <div className='flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-cyan-100 text-sm font-medium text-slate-600'>
+                  <div className='flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-cyan-100 text-sm font-medium text-slate-600 dark:from-slate-700 dark:to-slate-600 dark:text-slate-300'>
                     <svg
                       className='h-5 w-5'
                       fill='currentColor'
@@ -146,20 +146,20 @@ export default function ChatMessages({
                   </div>
                 </div>
                 <div className='flex flex-col items-start'>
-                  <div className='rounded-lg border border-cyan-200 bg-gradient-to-br from-white to-cyan-50 px-4 py-3 shadow-sm'>
+                  <div className='rounded-lg border border-cyan-200 bg-gradient-to-br from-white to-cyan-50 px-4 py-3 shadow-sm dark:border-slate-600 dark:from-slate-800 dark:to-slate-700'>
                     <div className='flex items-center space-x-2'>
                       <div className='flex space-x-1'>
-                        <div className='typing-indicator h-2 w-2 rounded-full bg-cyan-400'></div>
+                        <div className='typing-indicator h-2 w-2 rounded-full bg-cyan-400 dark:bg-cyan-500'></div>
                         <div
-                          className='typing-indicator h-2 w-2 rounded-full bg-cyan-400'
+                          className='typing-indicator h-2 w-2 rounded-full bg-cyan-400 dark:bg-cyan-500'
                           style={{ animationDelay: '0.2s' }}
                         ></div>
                         <div
-                          className='typing-indicator h-2 w-2 rounded-full bg-cyan-400'
+                          className='typing-indicator h-2 w-2 rounded-full bg-cyan-400 dark:bg-cyan-500'
                           style={{ animationDelay: '0.4s' }}
                         ></div>
                       </div>
-                      <span className='text-sm text-slate-600'>
+                      <span className='text-sm text-slate-600 dark:text-slate-300'>
                         AI is thinking...
                       </span>
                     </div>

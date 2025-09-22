@@ -65,7 +65,7 @@ export default function ChatSidebar({
       {isOpen && (
         <div className='fixed inset-0 z-40 lg:hidden'>
           <div
-            className='fixed inset-0 bg-slate-600 bg-opacity-75'
+            className='fixed inset-0 bg-slate-600 bg-opacity-75 dark:bg-slate-900 dark:bg-opacity-75'
             onClick={() => {}}
           />
         </div>
@@ -73,17 +73,17 @@ export default function ChatSidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gradient-to-b from-slate-50 to-cyan-50 shadow-lg transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gradient-to-b from-slate-50 to-cyan-50 shadow-lg transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:from-slate-900 dark:to-slate-800 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
       >
         <div className='flex h-full flex-col'>
           {/* Header */}
-          <div className='flex items-center justify-between border-b border-cyan-200 p-4'>
-            <h2 className='text-lg font-semibold text-slate-800'>
+          <div className='flex items-center justify-between border-b border-cyan-200 p-4 dark:border-slate-600'>
+            <h2 className='text-lg font-semibold text-slate-800 dark:text-slate-200'>
               Chat Sessions
             </h2>
             <button
               onClick={onNewSession}
-              className='rounded-md p-2 text-blue-600 transition-colors hover:bg-cyan-100'
+              className='rounded-md p-2 text-blue-600 transition-colors hover:bg-cyan-100 dark:text-blue-400 dark:hover:bg-slate-700'
               title='New Chat'
             >
               <svg
@@ -105,9 +105,9 @@ export default function ChatSidebar({
           {/* Sessions List */}
           <div className='flex-1 overflow-y-auto'>
             {sessions.length === 0 ? (
-              <div className='p-4 text-center text-slate-500'>
+              <div className='p-4 text-center text-slate-500 dark:text-slate-400'>
                 <svg
-                  className='mx-auto mb-3 h-12 w-12 text-cyan-300'
+                  className='mx-auto mb-3 h-12 w-12 text-cyan-300 dark:text-cyan-600'
                   fill='none'
                   stroke='currentColor'
                   viewBox='0 0 24 24'
@@ -122,7 +122,7 @@ export default function ChatSidebar({
                 <p className='text-sm'>No chat sessions yet</p>
                 <button
                   onClick={onNewSession}
-                  className='mt-2 text-sm text-blue-600 hover:text-cyan-700'
+                  className='mt-2 text-sm text-blue-600 hover:text-cyan-700 dark:text-blue-400 dark:hover:text-cyan-300'
                 >
                   Start your first chat
                 </button>
@@ -134,24 +134,24 @@ export default function ChatSidebar({
                     key={session.id}
                     className={`group relative cursor-pointer rounded-lg p-3 transition-colors ${
                       currentSession?.id === session.id
-                        ? 'border border-cyan-200 bg-cyan-50'
-                        : 'hover:bg-cyan-50'
+                        ? 'border border-cyan-200 bg-cyan-50 dark:border-cyan-600 dark:bg-cyan-900/30'
+                        : 'hover:bg-cyan-50 dark:hover:bg-slate-700/50'
                     } `}
                     onClick={() => onSelectSession(session)}
                   >
                     <div className='flex items-start justify-between'>
                       <div className='min-w-0 flex-1'>
-                        <p className='truncate text-sm font-medium text-slate-900'>
+                        <p className='truncate text-sm font-medium text-slate-900 dark:text-slate-100'>
                           {getSessionPreview(session)}
                         </p>
-                        <p className='mt-1 text-xs text-slate-500'>
+                        <p className='mt-1 text-xs text-slate-500 dark:text-slate-400'>
                           {formatDate(session.created_at)}
                         </p>
                       </div>
                       <button
                         onClick={(e) => handleDeleteSession(session.id, e)}
                         disabled={deletingSession === session.id}
-                        className='p-1 text-slate-400 opacity-0 transition-all hover:text-red-600 group-hover:opacity-100'
+                        className='p-1 text-slate-400 opacity-0 transition-all hover:text-red-600 group-hover:opacity-100 dark:text-slate-500 dark:hover:text-red-400'
                         title='Delete session'
                       >
                         {deletingSession === session.id ? (
@@ -198,8 +198,8 @@ export default function ChatSidebar({
           </div>
 
           {/* Footer */}
-          <div className='border-t border-cyan-200 p-4'>
-            <div className='text-center text-xs text-slate-500'>
+          <div className='border-t border-cyan-200 p-4 dark:border-slate-600'>
+            <div className='text-center text-xs text-slate-500 dark:text-slate-400'>
               Argo AI Assistant
             </div>
           </div>

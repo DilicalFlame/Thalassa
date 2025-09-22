@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import React from 'react'
 import Navigation from '@/components/Navigation'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 interface IRootLayout {
   children: React.ReactNode
@@ -18,8 +19,10 @@ export default function RootLayout({ children }: IRootLayout) {
   return (
     <html lang='en'>
       <body suppressHydrationWarning>
-        <Navigation />
-        {children}
+        <ThemeProvider>
+          <Navigation />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

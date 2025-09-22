@@ -41,17 +41,19 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   ]
 
   return (
-    <div className='border-t border-cyan-200 bg-gradient-to-r from-white to-cyan-50'>
+    <div className='border-t border-cyan-200 bg-gradient-to-r from-white to-cyan-50 dark:border-slate-600 dark:from-slate-800 dark:to-slate-700'>
       {/* Suggested Questions */}
       {message === '' && (
-        <div className='border-b border-cyan-100 px-4 py-3'>
+        <div className='border-b border-cyan-100 px-4 py-3 dark:border-slate-600'>
           <div className='flex flex-wrap gap-2'>
-            <span className='mr-2 text-sm text-slate-600'>Try asking:</span>
+            <span className='mr-2 text-sm text-slate-600 dark:text-slate-400'>
+              Try asking:
+            </span>
             {suggestedQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => setMessage(question)}
-                className='inline-flex items-center rounded-full bg-cyan-100 px-3 py-1 text-sm text-slate-700 transition-colors hover:bg-cyan-200'
+                className='inline-flex items-center rounded-full bg-cyan-100 px-3 py-1 text-sm text-slate-700 transition-colors hover:bg-cyan-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
                 disabled={disabled}
               >
                 {question}
@@ -73,14 +75,15 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
               placeholder='Ask me about oceanographic data, Argo floats, or marine science...'
               disabled={disabled}
               rows={1}
-              className='chat-input max-h-32 w-full resize-none rounded-lg border border-cyan-200 bg-white px-4 py-3 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50'
+              className='chat-input max-h-32 w-full resize-none rounded-lg border border-cyan-200 bg-white px-4 py-3 text-slate-900 placeholder-slate-500 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400 dark:focus:border-blue-400 dark:focus:ring-blue-500/20'
               style={{ minHeight: '50px' }}
             />
           </div>
           <button
             type='submit'
             disabled={!message.trim() || disabled}
-            className='rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-colors hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+            className='flex-shrink-0 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-colors hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:from-blue-700 dark:to-cyan-700 dark:hover:from-blue-800 dark:hover:to-cyan-800'
+            style={{ height: '50px', minHeight: '50px' }}
           >
             {disabled ? (
               <svg
@@ -121,7 +124,7 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
         </div>
 
         {/* Hint text */}
-        <div className='mt-2 text-xs text-slate-500'>
+        <div className='mt-2 text-xs text-slate-500 dark:text-slate-400'>
           Press Enter to send, Shift+Enter for new line
         </div>
       </form>

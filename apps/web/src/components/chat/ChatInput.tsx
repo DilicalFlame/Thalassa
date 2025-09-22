@@ -83,7 +83,12 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
             type='submit'
             disabled={!message.trim() || disabled}
             className='flex-shrink-0 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-colors hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:from-blue-700 dark:to-cyan-700 dark:hover:from-blue-800 dark:hover:to-cyan-800'
-            style={{ height: '50px', minHeight: '50px' }}
+            style={{
+              height: '50px',
+              minHeight: '50px',
+              alignSelf: 'flex-end',
+              transform: 'translateY(-7px)',
+            }}
           >
             {disabled ? (
               <svg

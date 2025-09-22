@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import ChatSidebar from './ChatSidebar'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
@@ -140,7 +139,7 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className='flex h-screen bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'>
+    <div className='flex h-screen overflow-hidden bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'>
       {/* Sidebar */}
       <ChatSidebar
         sessions={sessions}
@@ -153,7 +152,7 @@ export default function ChatInterface() {
       />
 
       {/* Main Chat Area */}
-      <div className='relative flex flex-1 flex-col'>
+      <div className='relative flex min-w-0 flex-1 flex-col overflow-hidden'>
         {/* Header */}
         <div className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm dark:border-slate-600 dark:from-slate-700 dark:to-slate-600'>
           <div className='flex items-center space-x-3'>
@@ -180,13 +179,9 @@ export default function ChatInterface() {
             </h1>
           </div>
           <div className='flex items-center space-x-4'>
-            <Link
-              href='/'
-              className='rounded-md bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20'
-            >
-              Map
-            </Link>
-            <DarkModeToggle />
+            <div className='hidden'>
+              <DarkModeToggle />
+            </div>
           </div>
         </div>
 
@@ -289,7 +284,7 @@ export default function ChatInterface() {
         )}
 
         {/* Connection Status - Bottom Right */}
-        <div className='absolute bottom-6 right-6 z-20'>
+        <div className='absolute bottom-2 right-6 z-20'>
           {connectionError ? (
             <div className='flex items-center space-x-2'>
               <span className='inline-flex items-center rounded-full bg-red-100 px-3 py-1.5 text-xs font-medium text-red-800 shadow-lg dark:bg-red-900/30 dark:text-red-300'>

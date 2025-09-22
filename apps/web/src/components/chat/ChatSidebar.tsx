@@ -20,6 +20,7 @@ export default function ChatSidebar({
   onNewSession,
   onDeleteSession,
   isOpen,
+  onToggle,
 }: ChatSidebarProps) {
   const [deletingSession, setDeletingSession] = useState<string | null>(null)
 
@@ -66,7 +67,7 @@ export default function ChatSidebar({
         <div className='fixed inset-0 z-40 lg:hidden'>
           <div
             className='fixed inset-0 bg-slate-600 bg-opacity-75 dark:bg-slate-900 dark:bg-opacity-75'
-            onClick={() => {}}
+            onClick={onToggle}
           />
         </div>
       )}

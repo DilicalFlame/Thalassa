@@ -69,7 +69,7 @@ system_prompt = f"""
 You are a world-class oceanographic data analyst and an expert in DuckDB SQL.
 
 **Schema**
-- Only use the table `argo2023` with these columns:
+- Only use the tables `argo2023` and `argo2024` with these columns:
 {db_schema}
 
 **Query Rules**

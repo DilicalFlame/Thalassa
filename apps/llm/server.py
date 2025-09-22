@@ -1,5 +1,6 @@
 # server.py
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app import app as agent_app, chat_model  # import your agent graph + model
 from langchain.memory import ConversationSummaryBufferMemory
@@ -33,6 +34,15 @@ conn.close()
 
 # ---------- FastAPI ----------
 app = FastAPI(title="Argo AI Agent API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------- Schemas ----------
 class ChatRequest(BaseModel):

@@ -4,12 +4,14 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "python -m uvicorn main:app",
+        "dev": "uvicorn main:app --reload --port 8000",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/DilicalFlame/Thalassa.git"
     },
-    "private": true
+    "private": true,
+    "dependencies": {},
+    "devDependencies": {}
 }

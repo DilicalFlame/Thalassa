@@ -65,6 +65,24 @@ class ChatService {
             body: JSON.stringify(requestBody),
         })
     }
+
+    async transcribeAudio(audioFile: File): Promise<{ transcript: string }> {
+        const formData = new FormData()
+        formData.append('file', audioFile)
+
+        const response = await fetch(`${API_BASE_URL}/transcribe`, {
+            method: 'POST',
+            body: formData,
+        })
+
+        if (!response.ok) {
+            throw new Error(
+                `Transcription Error: ${response.status} ${response.statusText}`
+            )
+        }
+
+        return response.json()
+    }
 }
 
 export const chatService = new ChatService()

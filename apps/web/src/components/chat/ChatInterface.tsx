@@ -317,7 +317,11 @@ export default function ChatInterface() {
 
         {/* Input Area */}
         {currentSession && (
-          <ChatInput onSendMessage={sendMessage} disabled={isLoading} />
+          <ChatInput
+            onSendMessage={sendMessage}
+            disabled={isLoading}
+            messageCount={messages.length}
+          />
         )}
 
         {/* Connection Status - Bottom Right */}

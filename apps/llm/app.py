@@ -63,6 +63,9 @@ db_schema = """
 - temp_c (DOUBLE)
 - sal_psu (DOUBLE)
 - region_name (VARCHAR)
+- psal_qc (TINYINT)
+- temp_qc (TINYINT)
+- pres_qc (TINYINT)
 """
 
 system_prompt = f"""
@@ -76,6 +79,10 @@ You are a world-class oceanographic data analyst and an expert in DuckDB SQL.
 - Each table consists data for that year only. Use the tables accordingly. Example: If user asks for data info between 2022 and 2024, then use all the three tables and look for the specific dates in the respective tables.
 - For aggregates (AVG, SUM, MIN, MAX):
   - Always include `IS NOT NULL` and 'NOT ISNAN()' on the aggregated column.
+  - Additionally, only include rows where the QC flag for the aggregated column is less than 3:
+    • temp_c → temp_qc < 3
+    • depth_m → pres_qc < 3
+    • sal_psu → psal_qc < 3
   - You may add additional conditions (e.g., region_name, lat/lon ranges, date/month).
     Example filters:
       • region_name ILIKE 'Arabian Sea'

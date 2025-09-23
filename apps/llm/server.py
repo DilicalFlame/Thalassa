@@ -1,18 +1,19 @@
 # server.py
-from fastapi.middleware.cors import CORSMiddleware
+import tempfile
+import uuid
+
+import duckdb
 from fastapi import FastAPI, HTTPException, UploadFile, File
-from config import GEMINI_API_KEY
-from pydantic import BaseModel
-from app import app as agent_app, chat_model
+from fastapi.middleware.cors import CORSMiddleware
+from google import genai
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_core.messages import HumanMessage
-from google import genai
-import duckdb
-import uuid
-import tempfile
+from pydantic import BaseModel
 
+from app import chat_model
+from config import GEMINI_API_KEY
 
-DB_PATH = "LOCAL/Resources/argo-old-2.db"
+DB_PATH = "./LOCAL/Resources/argo.db"
 
 # ---------- Ensure DB + Tables ----------
 conn = duckdb.connect(DB_PATH)

@@ -11,7 +11,7 @@ from langgraph.graph import StateGraph, END
 # New imports for memory
 from langchain.memory import ConversationSummaryBufferMemory
 
-__DB_PATH = "LOCAL/Resources/argo.db"
+__DB_PATH = "./LOCAL/Resources/argo.db"
 
 # ===============================
 # 1. SETUP: Model and Tools

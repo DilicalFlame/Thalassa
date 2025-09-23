@@ -43,7 +43,7 @@ def get_float_path(platform_id: int):
     # The `LIMIT 1` was likely for testing.
     query = """
             SELECT date, lat, lon
-            FROM main.distinct_float_positions
+            FROM main.distinct_float_positions_2023
             WHERE platform_id = ?
             ORDER BY date;
             """
@@ -116,7 +116,7 @@ def get_floats_in_box(
     # This query is now dead simple. It just filters the tiny summary table.
     query = """
             SELECT platform_id, lat, lon, date
-            FROM main.latest_float_positions
+            FROM main.latest_float_positions_2023
             WHERE lat BETWEEN ? AND ?
               AND lon BETWEEN ? AND ?
                 LIMIT ?;
@@ -132,7 +132,7 @@ def get_floats_in_box(
 def get_all_platform_ids():
     if not con:
         raise HTTPException(status_code=503, detail="Database connection not available.")
-    query = "SELECT platform_id FROM main.latest_float_positions ORDER BY platform_id;"
+    query = "SELECT platform_id FROM main.latest_float_positions_2023 ORDER BY platform_id;"
     try:
         df = con.execute(query).fetchdf()
         id_list = [int(pid) for pid in df['platform_id'].tolist()]

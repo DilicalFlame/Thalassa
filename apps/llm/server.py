@@ -1,12 +1,16 @@
 # server.py
-from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from config import GEMINI_API_KEY
 from pydantic import BaseModel
-from app import app as agent_app, chat_model  # import your agent graph + model
+from app import app as agent_app, chat_model
 from langchain.memory import ConversationSummaryBufferMemory
 from langchain_core.messages import HumanMessage
+from google import genai
 import duckdb
 import uuid
+import tempfile
+
 
 DB_PATH = "LOCAL/Resources/argo-old-2.db"
 
@@ -189,3 +193,23 @@ async def chat(req: ChatRequest):
         answer=final_answer.content,
         history=[{"role": r[0], "content": r[1]} for r in history]
     )
+
+@app.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    # Save the uploaded file to a temporary location
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    # Upload the file to Gemini
+    uploaded = client.files.upload(file=tmp_path)
+
+    # Ask Gemini to transcribe
+    prompt = "Transcribe the following audio file to plain text. Return only the transcript."
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=[prompt, uploaded]
+    )
+
+    return {"transcript": response.text}

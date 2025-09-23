@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useFadeIn, useHoverScale } from '@/hooks/useAnimations'
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void
@@ -10,6 +11,8 @@ interface ChatInputProps {
 export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useFadeIn<HTMLDivElement>(0.3, 'up')
+  const sendButtonRef = useHoverScale<HTMLButtonElement>(1.05)
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -41,7 +44,10 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   ]
 
   return (
-    <div className='border-t border-cyan-200 bg-gradient-to-r from-white to-cyan-50 dark:border-slate-600 dark:from-slate-800 dark:to-slate-700'>
+    <div
+      ref={containerRef}
+      className='border-t border-cyan-200 bg-gradient-to-r from-white to-cyan-50 dark:border-slate-600 dark:from-slate-800 dark:to-slate-700'
+    >
       {/* Suggested Questions */}
       {message === '' && (
         <div className='border-b border-cyan-100 px-4 py-3 dark:border-slate-600'>
@@ -80,6 +86,7 @@ export default function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
             />
           </div>
           <button
+            ref={sendButtonRef}
             type='submit'
             disabled={!message.trim() || disabled}
             className='flex-shrink-0 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 p-3 text-white transition-colors hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:from-blue-700 dark:to-cyan-700 dark:hover:from-blue-800 dark:hover:to-cyan-800'

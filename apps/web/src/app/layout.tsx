@@ -3,6 +3,7 @@ import './globals.css'
 import React from 'react'
 import Navigation from '@/components/Navigation'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { AnimationInitializer } from '@/components/AnimationInitializer'
 
 interface IRootLayout {
   children: React.ReactNode
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: IRootLayout) {
     <html lang='en'>
       <body suppressHydrationWarning>
         <ThemeProvider>
+          <AnimationInitializer />
           <Navigation />
           {children}
         </ThemeProvider>

@@ -1,9 +1,11 @@
 'use client'
 
 import { useTheme } from './ThemeProvider'
+import { useHoverScale } from '@/hooks/useAnimations'
 
 export default function DarkModeToggle() {
   const { theme, toggleTheme } = useTheme()
+  const buttonRef = useHoverScale<HTMLButtonElement>(1.05)
 
   const handleToggle = () => {
     console.log('Toggle theme clicked, current theme:', theme)
@@ -18,6 +20,7 @@ export default function DarkModeToggle() {
 
   return (
     <button
+      ref={buttonRef}
       onClick={handleToggle}
       className='relative z-10 inline-flex h-7 w-12 items-center rounded-full bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-blue-600 dark:bg-white/10'
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}

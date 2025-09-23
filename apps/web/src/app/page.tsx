@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { usePageTransition } from '@/hooks/useAnimations'
+import AnimatedLoader from '@/components/AnimatedLoader'
 
 // Dynamically import the MapViewer component with SSR disabled
 const MapViewer = dynamic(
@@ -15,19 +17,23 @@ const MapViewer = dynamic(
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#050505',
-          color: '#00ff00',
-          fontFamily: "'Courier New', Courier, monospace",
         }}
       >
-        Loading Map Viewer...
+        <AnimatedLoader
+          message='Loading Map Viewer'
+          type='typing'
+          color='#00ff00'
+        />
       </div>
     ),
   }
 )
 
 export default function HomePage() {
+  const pageRef = usePageTransition<HTMLElement>()
+
   return (
-    <main>
+    <main ref={pageRef}>
       <MapViewer />
     </main>
   )

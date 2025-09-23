@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import gsap from 'gsap'
 import ChatSidebar from './ChatSidebar'
 import ChatMessages from './ChatMessages'
 import ChatInput from './ChatInput'
@@ -22,6 +23,25 @@ export default function ChatInterface() {
   const containerRef = useFadeIn<HTMLDivElement>(0, 'none')
   const headerRef = useFadeIn<HTMLDivElement>(0.2, 'down')
   const welcomeRef = useScaleIn<HTMLDivElement>(0.6)
+  const headerToggleRef = useRef<HTMLButtonElement | null>(null)
+
+  // Animate header hamburger when it appears (sidebar closed)
+  useEffect(() => {
+    if (!sidebarOpen && headerToggleRef.current) {
+      gsap.fromTo(
+        headerToggleRef.current,
+        { y: -12, opacity: 0, scale: 0.8, rotate: -8 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          rotate: 0,
+          duration: 0.45,
+          ease: 'back.out(1.7)',
+        }
+      )
+    }
+  }, [sidebarOpen])
 
   // Load sessions on mount
   useEffect(() => {
@@ -174,7 +194,7 @@ export default function ChatInterface() {
       ref={containerRef}
       className='flex h-screen overflow-hidden bg-white dark:bg-slate-950'
     >
-      {/* Sidebar */}
+      {/* Sidebar Wrapper */}
       <ChatSidebar
         sessions={sessions}
         currentSession={currentSession}
@@ -187,39 +207,35 @@ export default function ChatInterface() {
 
       {/* Main Chat Area */}
       <div className='relative flex min-w-0 flex-1 flex-col overflow-hidden'>
+        {/* (Removed floating button; header icon handles reopen) */}
         {/* Header */}
         <div
           ref={headerRef}
           className='flex items-center justify-between border-b border-slate-200 bg-white/60 p-4 backdrop-blur-lg dark:border-slate-700 dark:bg-slate-900/60'
         >
-          <div className='flex items-center space-x-3'>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className='rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800'
-            >
-              <svg
-                className='h-6 w-6'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
+          <div className='flex h-9 items-center space-x-3'>
+            {!sidebarOpen && (
+              <button
+                ref={headerToggleRef}
+                onClick={() => setSidebarOpen(true)}
+                className='relative top-[2px] rounded-md border border-slate-200 bg-white/70 p-2 text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:shadow dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800'
+                title='Open sidebar'
               >
-                {sidebarOpen ? (
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M6 18L18 6M6 6l12 12'
-                  />
-                ) : (
+                <svg
+                  className='h-5 w-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
                     strokeWidth={2}
                     d='M4 6h16M4 12h16M4 18h16'
                   />
-                )}
-              </svg>
-            </button>
+                </svg>
+              </button>
+            )}
             <h1 className='text-xl font-semibold text-slate-800 dark:text-slate-200'>
               {currentSession ? 'Argo AI Chat' : 'Select or Create a Session'}
             </h1>

@@ -73,34 +73,60 @@ export default function ChatSidebar({
       )}
 
       {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-50/70 shadow-lg backdrop-blur-lg transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:bg-slate-900/70 dark:from-slate-900 dark:to-slate-800 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
+      <aside
+        className={`group/sidebar fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-50/80 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-lg transition-[transform,width] duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:bg-slate-900/70 dark:ring-slate-700/50 ${
+          isOpen
+            ? 'translate-x-0 lg:w-64 lg:min-w-[16rem]'
+            : '-translate-x-full lg:w-[0.65rem] lg:min-w-0 lg:cursor-pointer lg:hover:w-6'
+        }`}
+        onClick={() => {
+          // Allow clicking the thin collapsed strip on desktop to open
+          if (!isOpen) onToggle()
+        }}
       >
-        <div className='flex h-full flex-col border-r border-slate-200 dark:border-slate-800'>
+        <div
+          className={`flex h-full flex-col border-r border-slate-200 transition-opacity duration-200 dark:border-slate-800 ${
+            isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+        >
           {/* Header */}
           <div className='flex items-center justify-between p-4'>
-            <h2 className='text-lg font-semibold text-slate-800 dark:text-slate-200'>
-              Chat History
-            </h2>
-            <button
-              onClick={onToggle}
-              className='p-2 text-slate-500 hover:text-slate-800 lg:hidden dark:text-slate-400 dark:hover:text-slate-200'
-              title='Close sidebar'
-            >
-              <svg
-                className='h-6 w-6'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
+            <div className='flex h-9 items-center gap-2'>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggle()
+                }}
+                className='rounded-md border border-transparent bg-white/40 p-2 text-slate-600 shadow-sm transition hover:bg-white/70 dark:bg-slate-800/40 dark:text-slate-300 dark:hover:bg-slate-800'
+                title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-            </button>
+                <svg
+                  className='h-5 w-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  {isOpen ? (
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M6 18L18 6M6 6l12 12'
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M4 6h16M4 12h16M4 18h16'
+                    />
+                  )}
+                </svg>
+              </button>
+              <h2 className='text-lg font-semibold text-slate-800 dark:text-slate-200'>
+                Chat History
+              </h2>
+            </div>
           </div>
 
           {/* New Chat Button */}
@@ -229,7 +255,7 @@ export default function ChatSidebar({
             </div>
           </div>
         </div>
-      </div>
+      </aside>
     </>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { Message } from '@/types/chat'
 import MarkdownRenderer from './MarkdownRenderer'
+import { useStaggerChildren, useFadeIn } from '@/hooks/useAnimations'
 
 interface ChatMessagesProps {
   messages: Message[]
@@ -14,6 +15,8 @@ export default function ChatMessages({
   isLoading,
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useStaggerChildren<HTMLDivElement>(0, 0.1)
+  const emptyStateRef = useFadeIn<HTMLDivElement>(0.3, 'up')
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -30,9 +33,15 @@ export default function ChatMessages({
   }
 
   return (
-    <div className='chat-scrollbar h-full flex-1 space-y-6 overflow-y-auto p-4'>
+    <div
+      ref={messagesContainerRef}
+      className='chat-scrollbar h-full flex-1 space-y-6 overflow-y-auto p-4'
+    >
       {messages.length === 0 && !isLoading ? (
-        <div className='py-12 text-center text-slate-500 dark:text-slate-400'>
+        <div
+          ref={emptyStateRef}
+          className='py-12 text-center text-slate-500 dark:text-slate-400'
+        >
           <svg
             className='mx-auto mb-4 h-16 w-16 text-cyan-300 dark:text-cyan-600'
             fill='none'

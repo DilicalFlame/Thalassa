@@ -6,6 +6,9 @@ import { ViewToggle } from './flatmap/ViewToggle'
 import { DynamicCamera } from './DynamicCamera'
 import { UnifiedScene } from './flatmap/UnifiedScene'
 import { FloatDossier } from '@/components/floats/FloatDossier'
+import { useFadeIn } from '@/hooks/useAnimations'
+import { hapticUtils } from '@/lib/haptics'
+import AnimatedLoader from './AnimatedLoader'
 
 const Loader = () => {
   return (
@@ -15,13 +18,10 @@ const Loader = () => {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        color: '#00ff00',
-        fontFamily: "'Courier New', Courier, monospace",
-        fontSize: '18px',
         zIndex: 100,
       }}
     >
-      Loading Geographic Data...
+      <AnimatedLoader message='Loading Geographic Data' type='wave' />
     </div>
   )
 }
@@ -31,12 +31,17 @@ export const MapViewer = () => {
   const [isAutoRotating, setIsAutoRotating] = useState(true)
   const [selectedFloatId, setSelectedFloatId] = useState<number | null>(null)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const containerRef = useFadeIn<HTMLDivElement>(0, 'none')
 
   const handleFloatClick = (platformId: number) => {
+    // Haptic feedback for float selection
+    hapticUtils.floatSelect()
     setSelectedFloatId(platformId)
   }
 
   const closeDossier = () => {
+    // Light haptic feedback for closing
+    hapticUtils.modalClose()
     setSelectedFloatId(null)
   }
 
@@ -66,7 +71,10 @@ export const MapViewer = () => {
   }
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+    <div
+      ref={containerRef}
+      style={{ width: '100vw', height: '100vh', position: 'relative' }}
+    >
       <Suspense fallback={<Loader />}>
         <Canvas gl={{ antialias: true }} dpr={window.devicePixelRatio}>
           <DynamicCamera

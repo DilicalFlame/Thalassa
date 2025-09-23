@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Plot from 'react-plotly.js'
 import '@/styles/dossier.css'
+import { useScaleIn, useHoverScale } from '@/hooks/useAnimations'
+import { hapticUtils } from '@/lib/haptics'
 
 interface DossierProps {
   platformId: number
@@ -38,6 +40,19 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
   const [activeChart, setActiveChart] = useState<ChartType>(
     '3d_temperature_profile'
   )
+
+  const dossierRef = useScaleIn<HTMLDivElement>(0)
+  const closeButtonRef = useHoverScale<HTMLButtonElement>(1.1)
+
+  const handleClose = () => {
+    hapticUtils.modalClose()
+    onClose()
+  }
+
+  const handleChartChange = (chartType: ChartType) => {
+    hapticUtils.itemSelect()
+    setActiveChart(chartType)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -303,8 +318,12 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
 
   return (
     <div className='dossier-overlay'>
-      <div className='dossier-content'>
-        <button className='dossier-close' onClick={onClose}>
+      <div ref={dossierRef} className='dossier-content'>
+        <button
+          ref={closeButtonRef}
+          className='dossier-close'
+          onClick={handleClose}
+        >
           ×
         </button>
         <h2>Float Dossier: {platformId}</h2>
@@ -322,43 +341,43 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
             <div className='chart-tabs'>
               <button
                 className={`tab-button ${activeChart === '3d_temperature_profile' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_temperature_profile')}
+                onClick={() => handleChartChange('3d_temperature_profile')}
               >
                 3D Temp Profile
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_salinity_profile' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_salinity_profile')}
+                onClick={() => handleChartChange('3d_salinity_profile')}
               >
                 3D Sal Profile
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_temperature_timeseries' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_temperature_timeseries')}
+                onClick={() => handleChartChange('3d_temperature_timeseries')}
               >
                 3D Temp Series
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_salinity_timeseries' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_salinity_timeseries')}
+                onClick={() => handleChartChange('3d_salinity_timeseries')}
               >
                 3D Sal Series
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_ts_diagram' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_ts_diagram')}
+                onClick={() => handleChartChange('3d_ts_diagram')}
               >
                 3D T-S Diagram
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_trajectory' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_trajectory')}
+                onClick={() => handleChartChange('3d_trajectory')}
               >
                 3D Trajectory
               </button>
               <button
                 className={`tab-button ${activeChart === '3d_tsd_profile' ? 'active' : ''}`}
-                onClick={() => setActiveChart('3d_tsd_profile')}
+                onClick={() => handleChartChange('3d_tsd_profile')}
               >
                 3D T-S-D
               </button>

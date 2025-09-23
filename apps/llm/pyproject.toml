@@ -8,6 +8,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "duckdb>=1.4.0",
     "fastapi>=0.117.1",
+    "google-genai>=1.38.0",
     "ipykernel>=6.30.1",
     "jupyter>=1.1.1",
     "langchain>=0.3.27",
@@ -16,6 +17,7 @@ dependencies = [
     "notebook>=7.4.5",
     "numpy>=2.3.3",
     "pandas>=2.3.2",
+    "python-multipart>=0.0.20",
     "requests>=2.32.5",
     "uvicorn>=0.36.0",
 ]

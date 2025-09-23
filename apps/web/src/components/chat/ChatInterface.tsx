@@ -7,6 +7,8 @@ import ChatInput from './ChatInput'
 import DarkModeToggle from '../DarkModeToggle'
 import { chatService } from '@/services/chatService'
 import type { Session, Message } from '@/types/chat'
+import { useFadeIn, useScaleIn } from '@/hooks/useAnimations'
+import { hapticUtils } from '@/lib/haptics'
 
 export default function ChatInterface() {
   const [sessions, setSessions] = useState<Session[]>([])
@@ -16,6 +18,10 @@ export default function ChatInterface() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+
+  const containerRef = useFadeIn<HTMLDivElement>(0, 'none')
+  const headerRef = useFadeIn<HTMLDivElement>(0.2, 'down')
+  const welcomeRef = useScaleIn<HTMLDivElement>(0.6)
 
   // Load sessions on mount
   useEffect(() => {
@@ -67,6 +73,9 @@ export default function ChatInterface() {
 
   const createNewSession = async () => {
     try {
+      // Haptic feedback for creating new session
+      hapticUtils.buttonPress()
+
       const newSession = await chatService.createSession()
       const session: Session = {
         id: newSession.session_id,
@@ -77,21 +86,32 @@ export default function ChatInterface() {
       setMessages([])
       setConnectionError(null)
       setIsConnected(true)
+
+      // Success haptic feedback
+      hapticUtils.success()
     } catch (error) {
       console.error('Failed to create session:', error)
       setConnectionError(
         'Failed to create new session. Please check your connection to the AI service.'
       )
       setIsConnected(false)
+
+      // Error haptic feedback
+      hapticUtils.error()
     }
   }
 
   const selectSession = (session: Session) => {
+    // Haptic feedback for session selection
+    hapticUtils.itemSelect()
     setCurrentSession(session)
   }
 
   const deleteSession = async (sessionId: string) => {
     try {
+      // Haptic feedback for deletion
+      hapticUtils.itemDelete()
+
       await chatService.deleteSession(sessionId)
       setSessions((prev) => prev.filter((s) => s.id !== sessionId))
       if (currentSession?.id === sessionId) {
@@ -100,6 +120,8 @@ export default function ChatInterface() {
       }
     } catch (error) {
       console.error('Failed to delete session:', error)
+      // Error haptic feedback
+      hapticUtils.error()
     }
   }
 
@@ -111,6 +133,9 @@ export default function ChatInterface() {
 
     try {
       setIsLoading(true)
+
+      // Haptic feedback for sending message
+      hapticUtils.sendMessage()
 
       // Add user message immediately
       const userMessage: Message = {
@@ -125,6 +150,9 @@ export default function ChatInterface() {
 
       // Update messages with the full history from response
       setMessages(response.history)
+
+      // Haptic feedback for receiving response
+      hapticUtils.receiveMessage()
     } catch (error) {
       console.error('Failed to send message:', error)
       // Remove the optimistically added user message on error
@@ -133,13 +161,19 @@ export default function ChatInterface() {
         'Failed to send message. Please check your connection to the AI service.'
       )
       setIsConnected(false)
+
+      // Haptic feedback for error
+      hapticUtils.error()
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className='flex h-screen overflow-hidden bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'>
+    <div
+      ref={containerRef}
+      className='flex h-screen overflow-hidden bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'
+    >
       {/* Sidebar */}
       <ChatSidebar
         sessions={sessions}
@@ -154,7 +188,10 @@ export default function ChatInterface() {
       {/* Main Chat Area */}
       <div className='relative flex min-w-0 flex-1 flex-col overflow-hidden'>
         {/* Header */}
-        <div className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm dark:border-slate-600 dark:from-slate-700 dark:to-slate-600'>
+        <div
+          ref={headerRef}
+          className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm dark:border-slate-600 dark:from-slate-700 dark:to-slate-600'
+        >
           <div className='flex items-center space-x-3'>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -244,7 +281,7 @@ export default function ChatInterface() {
             <ChatMessages messages={messages} isLoading={isLoading} />
           ) : (
             <div className='flex h-full items-center justify-center text-center'>
-              <div className='max-w-md'>
+              <div ref={welcomeRef} className='max-w-md'>
                 <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-blue-200 dark:from-slate-700 dark:to-slate-600'>
                   <svg
                     className='h-8 w-8 text-blue-600 dark:text-blue-400'

@@ -74,17 +74,40 @@ export default function ChatSidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gradient-to-b from-slate-50 to-cyan-50 shadow-lg transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:from-slate-900 dark:to-slate-800 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-50/70 shadow-lg backdrop-blur-lg transition-transform duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:bg-slate-900/70 dark:from-slate-900 dark:to-slate-800 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
       >
-        <div className='flex h-full flex-col'>
+        <div className='flex h-full flex-col border-r border-slate-200 dark:border-slate-800'>
           {/* Header */}
-          <div className='flex items-center justify-between border-b border-cyan-200 p-4 dark:border-slate-600'>
+          <div className='flex items-center justify-between p-4'>
             <h2 className='text-lg font-semibold text-slate-800 dark:text-slate-200'>
-              Chat Sessions
+              Chat History
             </h2>
             <button
+              onClick={onToggle}
+              className='p-2 text-slate-500 hover:text-slate-800 lg:hidden dark:text-slate-400 dark:hover:text-slate-200'
+              title='Close sidebar'
+            >
+              <svg
+                className='h-6 w-6'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* New Chat Button */}
+          <div className='border-b border-t border-slate-200 p-4 dark:border-slate-700'>
+            <button
               onClick={onNewSession}
-              className='rounded-md p-2 text-blue-600 transition-colors hover:bg-cyan-100 dark:text-blue-400 dark:hover:bg-slate-700'
+              className='flex w-full items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700'
               title='New Chat'
             >
               <svg
@@ -100,6 +123,7 @@ export default function ChatSidebar({
                   d='M12 4v16m8-8H4'
                 />
               </svg>
+              New Chat
             </button>
           </div>
 

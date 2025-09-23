@@ -172,7 +172,7 @@ export default function ChatInterface() {
   return (
     <div
       ref={containerRef}
-      className='flex h-screen overflow-hidden bg-gradient-to-b from-slate-50 to-cyan-50 dark:from-slate-900 dark:to-slate-800'
+      className='flex h-screen overflow-hidden bg-white dark:bg-slate-950'
     >
       {/* Sidebar */}
       <ChatSidebar
@@ -190,28 +190,37 @@ export default function ChatInterface() {
         {/* Header */}
         <div
           ref={headerRef}
-          className='flex items-center justify-between border-b border-cyan-200 bg-gradient-to-r from-blue-600 to-cyan-600 p-4 shadow-sm dark:border-slate-600 dark:from-slate-700 dark:to-slate-600'
+          className='flex items-center justify-between border-b border-slate-200 bg-white/60 p-4 backdrop-blur-lg dark:border-slate-700 dark:bg-slate-900/60'
         >
           <div className='flex items-center space-x-3'>
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className='rounded-md p-2 text-white hover:bg-blue-700 lg:hidden dark:hover:bg-slate-600'
+              className='rounded-md p-2 text-slate-500 hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800'
             >
               <svg
-                className='h-5 w-5'
+                className='h-6 w-6'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M4 6h16M4 12h16M4 18h16'
-                />
+                {sidebarOpen ? (
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                ) : (
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M4 6h16M4 12h16M4 18h16'
+                  />
+                )}
               </svg>
             </button>
-            <h1 className='text-xl font-semibold text-white'>
+            <h1 className='text-xl font-semibold text-slate-800 dark:text-slate-200'>
               {currentSession ? 'Argo AI Chat' : 'Select or Create a Session'}
             </h1>
           </div>
@@ -275,43 +284,46 @@ export default function ChatInterface() {
           </div>
         )}
 
+        {/* Welcome Screen */}
+        {!currentSession && (
+          <div className='flex h-full items-center justify-center text-center'>
+            <div ref={welcomeRef} className='max-w-md'>
+              <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700'>
+                <svg
+                  className='h-8 w-8 text-slate-600 dark:text-slate-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
+                  />
+                </svg>
+              </div>
+              <h3 className='mb-2 text-lg font-medium text-slate-800 dark:text-slate-200'>
+                Welcome to Argo AI
+              </h3>
+              <p className='mb-4 text-slate-600 dark:text-slate-400'>
+                Start a conversation about oceanographic data. Ask questions
+                about Argo floats, temperature, salinity, and more.
+              </p>
+              <button
+                onClick={createNewSession}
+                className='inline-flex items-center rounded-md border border-transparent bg-slate-800 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:bg-slate-700 dark:hover:bg-slate-600'
+              >
+                Start New Chat
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Messages Area */}
         <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
-          {currentSession ? (
+          {currentSession && (
             <ChatMessages messages={messages} isLoading={isLoading} />
-          ) : (
-            <div className='flex h-full items-center justify-center text-center'>
-              <div ref={welcomeRef} className='max-w-md'>
-                <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-blue-200 dark:from-slate-700 dark:to-slate-600'>
-                  <svg
-                    className='h-8 w-8 text-blue-600 dark:text-blue-400'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
-                    />
-                  </svg>
-                </div>
-                <h3 className='mb-2 text-lg font-medium text-slate-800 dark:text-slate-200'>
-                  Welcome to Argo AI
-                </h3>
-                <p className='mb-4 text-slate-600 dark:text-slate-400'>
-                  Start a conversation about oceanographic data. Ask questions
-                  about Argo floats, temperature, salinity, and more.
-                </p>
-                <button
-                  onClick={createNewSession}
-                  className='inline-flex items-center rounded-md border border-transparent bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:from-blue-700 dark:to-cyan-700 dark:hover:from-blue-800 dark:hover:to-cyan-800'
-                >
-                  Start New Chat
-                </button>
-              </div>
-            </div>
           )}
         </div>
 

@@ -208,7 +208,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
     # Ask Gemini to transcribe
     prompt = "Transcribe the following audio file to plain text. Return only the transcript."
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=[prompt, uploaded]
     )
 

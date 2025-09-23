@@ -62,27 +62,19 @@ export default function ChatSidebar({
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div className='fixed inset-0 z-40 lg:hidden'>
-          <div
-            className='fixed inset-0 bg-slate-600 bg-opacity-75 dark:bg-slate-900 dark:bg-opacity-75'
-            onClick={onToggle}
-          />
-        </div>
-      )}
+      {/* (Removed dark mobile overlay to keep chat visible; sidebar still slides in) */}
 
       {/* Sidebar */}
       <aside
-        className={`group/sidebar fixed inset-y-0 left-0 z-50 w-64 transform bg-slate-50/80 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-lg transition-[transform,width] duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 dark:bg-slate-900/70 dark:ring-slate-700/50 ${
+        className={`group/sidebar relative z-10 flex h-full flex-shrink-0 flex-col bg-slate-50/80 shadow-lg ring-1 ring-slate-200/50 backdrop-blur-lg transition-[width] duration-300 ease-in-out dark:bg-slate-900/70 dark:ring-slate-700/50 ${
           isOpen
-            ? 'translate-x-0 lg:w-64 lg:min-w-[16rem]'
-            : '-translate-x-full lg:w-[0.65rem] lg:min-w-0 lg:cursor-pointer lg:hover:w-6'
+            ? 'w-64 min-w-[16rem]'
+            : 'w-0 min-w-0 overflow-hidden border-r-0'
         }`}
         onClick={() => {
-          // Allow clicking the thin collapsed strip on desktop to open
           if (!isOpen) onToggle()
         }}
+        aria-hidden={!isOpen}
       >
         <div
           className={`flex h-full flex-col border-r border-slate-200 transition-opacity duration-200 dark:border-slate-800 ${
@@ -99,6 +91,11 @@ export default function ChatSidebar({
                 }}
                 className='rounded-md border border-transparent bg-white/40 p-2 text-slate-600 shadow-sm transition hover:bg-white/70 dark:bg-slate-800/40 dark:text-slate-300 dark:hover:bg-slate-800'
                 title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                aria-label={
+                  isOpen
+                    ? 'Collapse chat history sidebar'
+                    : 'Expand chat history sidebar'
+                }
               >
                 <svg
                   className='h-5 w-5'

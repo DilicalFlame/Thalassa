@@ -16,7 +16,9 @@ export default function ChatInterface() {
   const [currentSession, setCurrentSession] = useState<Session | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Sidebar defaults to closed on small screens for better mobile UX.
+  // We'll auto-open it on larger screens (lg+) via an effect below.
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [isConnected, setIsConnected] = useState(false)
 
@@ -43,9 +45,27 @@ export default function ChatInterface() {
     }
   }, [sidebarOpen])
 
-  // Load sessions on mount
+  // Load sessions on mount + set initial sidebar state based on viewport
   useEffect(() => {
     loadSessions()
+
+    // Auto-open sidebar on large screens
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const handleMQ = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        setSidebarOpen(true)
+      } else {
+        // keep user choice on mobile; don't force close if they manually opened
+        setSidebarOpen(false)
+      }
+    }
+
+    // Initialize
+    handleMQ(mq)
+    // Listen for changes
+    const listener = (e: MediaQueryListEvent) => handleMQ(e)
+    mq.addEventListener('change', listener)
+    return () => mq.removeEventListener('change', listener)
   }, [])
 
   // Load messages when session changes
@@ -192,7 +212,7 @@ export default function ChatInterface() {
   return (
     <div
       ref={containerRef}
-      className='flex h-screen overflow-hidden bg-white dark:bg-slate-950'
+      className='flex h-dvh min-h-screen overflow-hidden bg-white dark:bg-slate-950'
     >
       {/* Sidebar Wrapper */}
       <ChatSidebar
@@ -220,6 +240,7 @@ export default function ChatInterface() {
                 onClick={() => setSidebarOpen(true)}
                 className='relative top-[2px] rounded-md border border-slate-200 bg-white/70 p-2 text-slate-600 shadow-sm backdrop-blur transition hover:bg-white hover:shadow dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800'
                 title='Open sidebar'
+                aria-label='Open chat history sidebar'
               >
                 <svg
                   className='h-5 w-5'

@@ -9,6 +9,7 @@ interface TimeControlsProps {
   onYearChange?: (year: number) => void
   onRangeChange?: (start: string, end: string) => void
   onPlayToggle?: (playing: boolean) => void
+  onSpeedChange?: (msPerFrame: number) => void
   initialYear?: number
 }
 
@@ -21,6 +22,7 @@ export const TimeControls = ({
   onYearChange,
   onRangeChange,
   onPlayToggle,
+  onSpeedChange,
   initialYear = 2023,
 }: TimeControlsProps) => {
   const [mode, setMode] = useState<Mode>('year')
@@ -28,6 +30,7 @@ export const TimeControls = ({
   const [startDate, setStartDate] = useState(`${initialYear}-01-01`)
   const [endDate, setEndDate] = useState(`${initialYear}-12-31`)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [speed, setSpeed] = useState(500) // ms per frame
 
   useEffect(() => {
     if (mode === 'year') {
@@ -41,6 +44,11 @@ export const TimeControls = ({
     const next = !isPlaying
     setIsPlaying(next)
     onPlayToggle?.(next)
+  }
+
+  const handleSpeedChange = (val: number) => {
+    setSpeed(val)
+    onSpeedChange?.(val)
   }
 
   return (
@@ -124,6 +132,30 @@ export const TimeControls = ({
           <button onClick={togglePlay} style={buttonStyle(isPlaying)}>
             {isPlaying ? 'Pause Animation' : 'Play Animation'}
           </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ opacity: 0.8 }}>
+              Speed ({(1000 / speed).toFixed(0)} fps)
+            </span>
+            <input
+              type='range'
+              min={10} /* 100 fps */
+              max={2000} /* 0.5 fps */
+              step={10}
+              value={speed}
+              onChange={(e) => handleSpeedChange(Number(e.target.value))}
+            />
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 10,
+                opacity: 0.7,
+              }}
+            >
+              <span>100 fps</span>
+              <span>0.5 fps</span>
+            </div>
+          </div>
         </div>
       )}
     </div>

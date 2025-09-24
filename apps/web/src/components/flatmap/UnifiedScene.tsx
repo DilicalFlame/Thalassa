@@ -15,6 +15,13 @@ interface UnifiedSceneProps {
   startDate?: string
   endDate?: string
   play?: boolean
+  speedMs?: number
+  onFrameFloat?: (fp: {
+    platform_id: number
+    lat: number
+    lon: number
+    date: string
+  }) => void
 }
 
 export const UnifiedScene = ({
@@ -26,6 +33,8 @@ export const UnifiedScene = ({
   startDate,
   endDate,
   play = false,
+  speedMs = 500,
+  onFrameFloat,
 }: UnifiedSceneProps) => {
   const [geoData, setGeoData] = useState(null)
   const globeGroupRef = useRef<THREE.Group>(null!) // Use non-null assertion
@@ -121,6 +130,8 @@ export const UnifiedScene = ({
           startDate={startDate}
           endDate={endDate}
           play={play}
+          speedMs={speedMs}
+          onFrameFloat={onFrameFloat}
         />
       </group>
     </>

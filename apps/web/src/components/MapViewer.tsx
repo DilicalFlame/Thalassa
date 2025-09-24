@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useRef, useState, useCallback } from 'react'
+import { Suspense, useRef, useState, useCallback, useEffect } from 'react'
 import { ViewToggle } from './flatmap/ViewToggle'
 import { DynamicCamera } from './DynamicCamera'
 import { UnifiedScene } from './flatmap/UnifiedScene'
@@ -10,6 +10,12 @@ import { useFadeIn } from '@/hooks/useAnimations'
 import { hapticUtils } from '@/lib/haptics'
 import AnimatedLoader from './AnimatedLoader'
 import { TimeControls } from './TimeControls'
+
+interface Msg {
+  id: number
+  text: string
+  created: number
+}
 
 const Loader = () => {
   return (
@@ -36,6 +42,17 @@ export const MapViewer = () => {
   const [startDate, setStartDate] = useState<string | undefined>(undefined)
   const [endDate, setEndDate] = useState<string | undefined>(undefined)
   const [play, setPlay] = useState(false)
+  const [speedMs, setSpeedMs] = useState(500)
+  const [messages, setMessages] = useState<Msg[]>([])
+
+  // Clean up old messages every 5s
+  useEffect(() => {
+    const t = setInterval(() => {
+      const now = Date.now()
+      setMessages((msgs) => msgs.filter((m) => now - m.created < 4000))
+    }, 2000)
+    return () => clearInterval(t)
+  }, [])
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useFadeIn<HTMLDivElement>(0, 'none')
 
@@ -88,6 +105,18 @@ export const MapViewer = () => {
     setEndDate(end)
   }, [])
 
+  const handleFrameFloat = useCallback(
+    (fp: { platform_id: number; lat: number; lon: number; date: string }) => {
+      const msg: Msg = {
+        id: Math.random(),
+        text: `Loaded float ${fp.platform_id} @ ${fp.lat.toFixed(2)}, ${fp.lon.toFixed(2)} (${new Date(fp.date).toISOString()})`,
+        created: Date.now(),
+      }
+      setMessages((prev) => [...prev.slice(-4), msg])
+    },
+    []
+  )
+
   return (
     <div
       ref={containerRef}
@@ -109,13 +138,21 @@ export const MapViewer = () => {
             startDate={startDate}
             endDate={endDate}
             play={play}
+            speedMs={speedMs}
+            onFrameFloat={handleFrameFloat}
           />
         </Canvas>
       </Suspense>
 
       {/* Conditionally render the dossier popup */}
       {selectedFloatId && (
-        <FloatDossier platformId={selectedFloatId} onClose={closeDossier} />
+        <FloatDossier
+          platformId={selectedFloatId}
+          onClose={closeDossier}
+          year={year}
+          startDate={startDate}
+          endDate={endDate}
+        />
       )}
 
       <ViewToggle is3D={is3D} setIs3D={setIs3D} />
@@ -123,7 +160,42 @@ export const MapViewer = () => {
         onYearChange={handleYearChange}
         onRangeChange={handleRangeChange}
         onPlayToggle={setPlay}
+        onSpeedChange={setSpeedMs}
       />
+
+      {/* Messages overlay */}
+      {messages.length > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            right: 16,
+            bottom: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            maxWidth: 340,
+            zIndex: 80,
+          }}
+        >
+          {messages.map((m) => (
+            <div
+              key={m.id}
+              style={{
+                background: 'rgba(0,0,0,0.6)',
+                color: '#d6faff',
+                padding: '6px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                lineHeight: 1.3,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.15)',
+              }}
+            >
+              {m.text}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

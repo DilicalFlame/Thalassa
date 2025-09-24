@@ -24,6 +24,8 @@ interface FloatDotsProps {
   startDate?: string // inclusive range start (YYYY-MM-DD)
   endDate?: string // inclusive range end (YYYY-MM-DD)
   play?: boolean // animate through range
+  speedMs?: number // milliseconds per frame
+  onFrameFloat?: (fp: FloatPosition) => void
 }
 
 export const FloatDots = ({
@@ -38,6 +40,8 @@ export const FloatDots = ({
   startDate,
   endDate,
   play = false,
+  speedMs = 500,
+  onFrameFloat,
 }: FloatDotsProps) => {
   const [floatData, setFloatData] = useState<FloatPosition[]>([])
   const [rangeData, setRangeData] = useState<FloatPosition[]>([])
@@ -282,10 +286,15 @@ export const FloatDots = ({
   useEffect(() => {
     if (!play || !rangeData.length) return
     const interval = setInterval(() => {
-      setFrameIndex((idx) => (idx + 1) % rangeData.length)
-    }, 500) // advance every 0.5s
+      setFrameIndex((idx) => {
+        const next = (idx + 1) % rangeData.length
+        const fp = rangeData[next]
+        if (fp && onFrameFloat) onFrameFloat(fp)
+        return next
+      })
+    }, speedMs)
     return () => clearInterval(interval)
-  }, [play, rangeData])
+  }, [play, rangeData, speedMs, onFrameFloat])
 
   // Create a circular texture for the points
   const circleTexture = useMemo(() => {

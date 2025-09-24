@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Plot from 'react-plotly.js'
 import '@/styles/dossier.css'
 import { useScaleIn, useHoverScale } from '@/hooks/useAnimations'
@@ -9,6 +9,9 @@ import { hapticUtils } from '@/lib/haptics'
 interface DossierProps {
   platformId: number
   onClose: () => void
+  year?: number
+  startDate?: string
+  endDate?: string
 }
 
 interface DossierDataPoint {
@@ -33,13 +36,22 @@ type ChartType =
   | '3d_trajectory'
   | '3d_tsd_profile'
 
-export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
+export const FloatDossier = ({
+  platformId,
+  onClose,
+  year = 2023,
+  startDate,
+  endDate,
+}: DossierProps) => {
   const [data, setData] = useState<DossierDataPoint[]>([])
   const [pathData, setPathData] = useState<PathDataPoint[]>([])
   const [loading, setLoading] = useState(true)
   const [activeChart, setActiveChart] = useState<ChartType>(
     '3d_temperature_profile'
   )
+  // (Fallback logic removed) No year fallback tracking needed now
+  // Guard ref to prevent duplicate fetch in React StrictMode dev
+  const didRunRef = useRef(false)
 
   const dossierRef = useScaleIn<HTMLDivElement>(0)
   const closeButtonRef = useHoverScale<HTMLButtonElement>(1.1)
@@ -55,30 +67,88 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
   }
 
   useEffect(() => {
+    if (didRunRef.current) return
+    didRunRef.current = true
     const fetchData = async () => {
       setLoading(true)
       try {
-        // Fetch dossier data (temperature, salinity, depth over time)
-        const dossierResponse = await fetch(
-          `http://localhost:8000/api/float/${platformId}/dossier`
-        )
-        const dossierResult = await dossierResponse.json()
-        setData(dossierResult)
+        let dossierUrl: string
+        let pathUrl: string
+        if (startDate && endDate) {
+          dossierUrl = `http://localhost:8000/api/float/${platformId}/dossier_range?start_date=${startDate}&end_date=${endDate}`
+          pathUrl = `http://localhost:8000/api/float/${platformId}/path_range?start_date=${startDate}&end_date=${endDate}`
+        } else {
+          dossierUrl = `http://localhost:8000/api/float/${platformId}/dossier?year=${year}`
+          pathUrl = `http://localhost:8000/api/float/${platformId}/path?year=${year}`
+        }
+        const [dossierResponse, pathResponse] = await Promise.all([
+          fetch(dossierUrl),
+          fetch(pathUrl),
+        ])
 
-        // Fetch path data (trajectory coordinates)
-        const pathResponse = await fetch(
-          `http://localhost:8000/api/float/${platformId}/path`
-        )
-        const pathResult = await pathResponse.json()
-        setPathData(pathResult)
+        // Simple dossier parse (no fallback)
+        let dossierData: DossierDataPoint[] = []
+        if (dossierResponse.ok) {
+          try {
+            const dossierResult = await dossierResponse.json()
+            const dr = dossierResult as unknown
+            const profilesArray: unknown = Array.isArray(dr)
+              ? dr
+              : typeof dr === 'object' &&
+                  dr !== null &&
+                  Array.isArray((dr as { profiles?: unknown }).profiles)
+                ? (dr as { profiles: unknown[] }).profiles
+                : []
+            dossierData = (profilesArray as unknown[])
+              .filter(
+                (r): r is Record<string, unknown> =>
+                  !!r && typeof r === 'object'
+              )
+              .map((r) => ({
+                date: String(r.date ?? ''),
+                depth_m: Number(r.depth_m),
+                temp_c: Number(r.temp_c),
+                sal_psu: Number(r.sal_psu),
+              }))
+          } catch (e) {
+            console.warn('Failed to parse dossier JSON', e)
+          }
+        } else {
+          console.warn(
+            'Dossier fetch failed',
+            dossierResponse.status,
+            dossierUrl
+          )
+        }
+        setData(dossierData)
+
+        if (pathResponse.ok) {
+          try {
+            const pathResult = await pathResponse.json()
+            if (Array.isArray(pathResult)) {
+              setPathData(pathResult)
+            } else {
+              console.warn('Unexpected path response shape', pathResult)
+              setPathData([])
+            }
+          } catch (e) {
+            console.warn('Failed to parse path JSON', e)
+            setPathData([])
+          }
+        } else {
+          console.warn('Path fetch failed', pathResponse.status, pathUrl)
+          setPathData([])
+        }
       } catch (error) {
         console.error('Error fetching dossier data:', error)
+        setData([])
+        setPathData([])
       } finally {
         setLoading(false)
       }
     }
     fetchData()
-  }, [platformId])
+  }, [platformId, year, startDate, endDate])
 
   // Helper function to calculate days since first measurement
   const getDaysSinceFirst = (dateStr: string, firstDate: Date) => {
@@ -106,6 +176,8 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
   const validPathData = pathData.filter(
     (d) => d.lat != null && d.lon != null && !isNaN(d.lat) && !isNaN(d.lon)
   )
+
+  // Removed dossierYearNotice (no fallback)
 
   // Chart configurations
   const chartConfigs = {
@@ -409,6 +481,7 @@ export const FloatDossier = ({ platformId, onClose }: DossierProps) => {
                 Valid data points: {validData.length} | Path points:{' '}
                 {validPathData.length} | First measurement:{' '}
                 {firstDate.toLocaleDateString()}
+                {/* Fallback indicators removed */}
               </p>
             </div>
           </>

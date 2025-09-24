@@ -26,7 +26,7 @@ def database_query_tool(query: str) -> dict:
     """Executes a SQL query against the DuckDB Argo float database.
     The SQL string must be passed in the 'query' field (not 'question')."""
     try:
-        con = duckdb.connect(__DB_PATH)
+        con = duckdb.connect(__DB_PATH, read_only=True)
         cursor = con.cursor()
         cursor.execute(query)
         rows = cursor.fetchall()

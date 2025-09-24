@@ -10,14 +10,22 @@ interface UnifiedSceneProps {
   is3D: boolean
   isAutoRotating: boolean
   onFloatClick: (platformId: number) => void
-  selectedFloatId?: number | null // Add this prop to pass through to FloatDots
+  selectedFloatId?: number | null
+  year?: number
+  startDate?: string
+  endDate?: string
+  play?: boolean
 }
 
 export const UnifiedScene = ({
   is3D,
   isAutoRotating,
   onFloatClick,
-  selectedFloatId = null, // Add this parameter
+  selectedFloatId = null,
+  year = 2023,
+  startDate,
+  endDate,
+  play = false,
 }: UnifiedSceneProps) => {
   const [geoData, setGeoData] = useState(null)
   const globeGroupRef = useRef<THREE.Group>(null!) // Use non-null assertion
@@ -104,12 +112,16 @@ export const UnifiedScene = ({
 
         <FloatDots
           key={is3D ? '3d-dots' : '2d-dots'}
-          dotColor='#ffff00'
-          dotSize={dynamicDotSize}
-          is3D={is3D}
-          onFloatClick={onFloatClick}
-          selectedFloatId={selectedFloatId}
-        />
+            dotColor='#ffff00'
+            dotSize={dynamicDotSize}
+            is3D={is3D}
+            onFloatClick={onFloatClick}
+            selectedFloatId={selectedFloatId}
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            play={play}
+          />
       </group>
     </>
   )

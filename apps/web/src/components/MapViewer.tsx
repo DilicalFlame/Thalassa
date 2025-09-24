@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useRef, useState, useCallback } from 'react'
 import { ViewToggle } from './flatmap/ViewToggle'
 import { DynamicCamera } from './DynamicCamera'
 import { UnifiedScene } from './flatmap/UnifiedScene'
@@ -9,6 +9,7 @@ import { FloatDossier } from '@/components/floats/FloatDossier'
 import { useFadeIn } from '@/hooks/useAnimations'
 import { hapticUtils } from '@/lib/haptics'
 import AnimatedLoader from './AnimatedLoader'
+import { TimeControls } from './TimeControls'
 
 const Loader = () => {
   return (
@@ -30,6 +31,11 @@ export const MapViewer = () => {
   const [is3D, setIs3D] = useState(true)
   const [isAutoRotating, setIsAutoRotating] = useState(true)
   const [selectedFloatId, setSelectedFloatId] = useState<number | null>(null)
+  // Time / animation state
+  const [year, setYear] = useState(2023)
+  const [startDate, setStartDate] = useState<string | undefined>(undefined)
+  const [endDate, setEndDate] = useState<string | undefined>(undefined)
+  const [play, setPlay] = useState(false)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useFadeIn<HTMLDivElement>(0, 'none')
 
@@ -70,6 +76,18 @@ export const MapViewer = () => {
     resetIdleTimer()
   }
 
+  const handleYearChange = useCallback((y: number) => {
+    setYear(y)
+    setStartDate(undefined)
+    setEndDate(undefined)
+    setPlay(false)
+  }, [])
+
+  const handleRangeChange = useCallback((start: string, end: string) => {
+    setStartDate(start)
+    setEndDate(end)
+  }, [])
+
   return (
     <div
       ref={containerRef}
@@ -87,6 +105,10 @@ export const MapViewer = () => {
             is3D={is3D}
             isAutoRotating={isAutoRotating}
             selectedFloatId={selectedFloatId}
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            play={play}
           />
         </Canvas>
       </Suspense>
@@ -97,6 +119,11 @@ export const MapViewer = () => {
       )}
 
       <ViewToggle is3D={is3D} setIs3D={setIs3D} />
+      <TimeControls
+        onYearChange={handleYearChange}
+        onRangeChange={handleRangeChange}
+        onPlayToggle={setPlay}
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import * as THREE from 'three'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { lonLatToVector3 } from '../globe/LandMasses'
 
@@ -19,19 +19,29 @@ interface FloatDotsProps {
   circleRadius?: number
   is3D?: boolean
   onFloatClick: (platformId: number) => void
-  selectedFloatId?: number | null // Add this prop to track selected float
+  selectedFloatId?: number | null
+  year?: number // when provided, fetch latest positions for that year
+  startDate?: string // inclusive range start (YYYY-MM-DD)
+  endDate?: string // inclusive range end (YYYY-MM-DD)
+  play?: boolean // animate through range
 }
 
 export const FloatDots = ({
   apiBaseUrl = 'http://localhost:8000',
   dotColor = '#ffff00',
-  dotSize = 0.1, // Changed from 0 to 2 - dots were invisible with size 0!
+  dotSize = 0.1,
   circleRadius = 1,
   is3D = true,
   onFloatClick,
-  selectedFloatId = null, // Initialize with null
+  selectedFloatId = null,
+  year = 2023,
+  startDate,
+  endDate,
+  play = false,
 }: FloatDotsProps) => {
   const [floatData, setFloatData] = useState<FloatPosition[]>([])
+  const [rangeData, setRangeData] = useState<FloatPosition[]>([])
+  const [frameIndex, setFrameIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentZoom, setCurrentZoom] = useState(1)
@@ -90,10 +100,10 @@ export const FloatDots = ({
   }
 
   // Single function to calculate dot size based on zoom - DRY principle
-  const calculateDotSize = (zoom: number) => {
-    const ZOOM_SCALE_FACTOR = 120 // Single place to adjust zoom sensitivity
+  const calculateDotSize = useCallback((zoom: number) => {
+    const ZOOM_SCALE_FACTOR = 120
     return dotSize * (zoom / ZOOM_SCALE_FACTOR)
-  }
+  }, [dotSize])
 
   // Track zoom changes and handle hover detection in real-time
   useFrame(() => {
@@ -175,48 +185,78 @@ export const FloatDots = ({
     }
   })
 
+  // Fetch latest positions for a single year when no range specified
   useEffect(() => {
-    const fetchFloatData = async () => {
+    if (startDate && endDate) return // handled by range effect
+    let abort = false
+    const fetchYearData = async () => {
       try {
         setLoading(true)
         setError(null)
-        console.log('Fetching all float positions in a single request...')
-
-        // Define the geographic box for the whole world to get all floats initially
         const params = new URLSearchParams({
-          min_lat: '-90',
-          max_lat: '90',
-          min_lon: '-180',
-          max_lon: '180',
-          limit: '5000', // Ask for up to 5000 floats
+          min_lat: '-90', max_lat: '90', min_lon: '-180', max_lon: '180', limit: '5000', year: String(year)
         })
-
-        // --- THE CRITICAL CHANGE ---
-        // Make ONE single API call to the efficient endpoint
-        const response = await fetch(
-          `${apiBaseUrl}/api/floats_in_box?${params}`
-        )
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch float positions: ${response.status}`)
+        const res = await fetch(`${apiBaseUrl}/api/floats_in_box?${params}`)
+        if (!res.ok) throw new Error(`Failed to fetch year ${year}`)
+        const data: FloatPosition[] = await res.json()
+        if (!abort) {
+          setFloatData(data)
+          setRangeData([])
         }
-
-        const positions: FloatPosition[] = await response.json()
-        console.log(`Successfully fetched ${positions.length} float positions.`)
-        setFloatData(positions)
-      } catch (err) {
-        console.error('Failed to fetch float data:', err)
-        setError(
-          err instanceof Error ? err.message : 'Failed to fetch float data'
-        )
-        setFloatData([])
+      } catch (e) {
+        if (!abort) {
+          setError(e instanceof Error ? e.message : 'Failed to fetch data')
+          setFloatData([])
+        }
       } finally {
-        setLoading(false)
+        if (!abort) setLoading(false)
       }
     }
+    fetchYearData()
+    return () => { abort = true }
+  }, [apiBaseUrl, year, startDate, endDate])
 
-    fetchFloatData()
-  }, [apiBaseUrl]) // This effect runs once on component mount
+  // Fetch range data when both startDate & endDate present
+  useEffect(() => {
+    if (!startDate || !endDate) return
+    let abort = false
+    const fetchRangeData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const params = new URLSearchParams({
+          min_lat: '-90', max_lat: '90', min_lon: '-180', max_lon: '180', start_date: startDate, end_date: endDate
+        })
+        const res = await fetch(`${apiBaseUrl}/api/floats_in_box/range?${params}`)
+        if (!res.ok) throw new Error('Failed to fetch range data')
+        const payload = await res.json()
+        const positions: FloatPosition[] = payload.positions || []
+        if (!abort) {
+          setRangeData(positions)
+          setFloatData([])
+          setFrameIndex(positions.length ? positions.length - 1 : 0) // initialize at last frame
+        }
+      } catch (e) {
+        if (!abort) {
+          setError(e instanceof Error ? e.message : 'Failed to fetch range data')
+          setRangeData([])
+        }
+      } finally {
+        if (!abort) setLoading(false)
+      }
+    }
+    fetchRangeData()
+    return () => { abort = true }
+  }, [apiBaseUrl, startDate, endDate])
+
+  // Animation loop for range playback
+  useEffect(() => {
+    if (!play || !rangeData.length) return
+    const interval = setInterval(() => {
+      setFrameIndex(idx => (idx + 1) % rangeData.length)
+    }, 500) // advance every 0.5s
+    return () => clearInterval(interval)
+  }, [play, rangeData])
 
   // Create a circular texture for the points
   const circleTexture = useMemo(() => {
@@ -251,13 +291,21 @@ export const FloatDots = ({
 
   // Split floats into selected, hovered, and unselected for different coloring
   const { selectedFloats, hoveredFloats, unselectedFloats } = useMemo(() => {
-    if (!floatData.length) return { selectedFloats: [], hoveredFloats: [], unselectedFloats: [] }
+    // Decide which dataset to visualize: latest snapshot (floatData) or progressive rangeData up to frameIndex
+    let active: FloatPosition[] = []
+    if (rangeData.length) {
+      // Show cumulative positions up to current frame (inclusive)
+      active = rangeData.slice(0, Math.min(frameIndex + 1, rangeData.length))
+    } else {
+      active = floatData
+    }
+    if (!active.length) return { selectedFloats: [], hoveredFloats: [], unselectedFloats: [] }
 
     const selected: FloatPosition[] = []
     const hovered: FloatPosition[] = []
     const unselected: FloatPosition[] = []
 
-    floatData.forEach((float) => {
+    active.forEach((float) => {
       if (float.platform_id === selectedFloatId) {
         selected.push(float)
       } else if (float.platform_id === hoveredFloatId) {
@@ -268,7 +316,7 @@ export const FloatDots = ({
     })
 
     return { selectedFloats: selected, hoveredFloats: hovered, unselectedFloats: unselected }
-  }, [floatData, selectedFloatId, hoveredFloatId])
+  }, [floatData, rangeData, frameIndex, selectedFloatId, hoveredFloatId])
 
   // Create separate geometries for selected and unselected floats
   const unselectedGeometry = useMemo(() => {
@@ -332,7 +380,7 @@ export const FloatDots = ({
       const zoom = orthoCam.zoom || 1
       return calculateDotSize(zoom)
     }
-  }, [dotSize, is3D, camera])
+  }, [dotSize, is3D, camera, calculateDotSize])
 
   if (loading) return null
   if (error) return null

@@ -34,3 +34,51 @@ Here’s how it comes together:
 ## Why it matters
 
 We want to make ocean intelligence accessible to everyone. So researchers can move faster, learners can explore with curiosity, and decision‑makers can act with confidence.
+
+## Time Range & Year Selection (New)
+
+The globe now supports exploring float positions by individual year (2022–2024) or animating positions over a custom date range.
+
+### Backend Additions
+
+Endpoints now accept an optional `year` (default 2023):
+
+- `GET /api/floats_in_box?min_lat=-90&max_lat=90&min_lon=-180&max_lon=180&year=2024`
+- `GET /api/float/{platform_id}/path?year=2022`
+- `GET /api/float/{platform_id}/profile?year=2024`
+- `GET /api/float/{platform_id}/dossier?year=2022`
+- `GET /api/float/all/platform_id?year=2024`
+
+New range endpoint (unions distinct position tables across years):
+
+```
+GET /api/floats_in_box/range?min_lat=-90&max_lat=90&min_lon=-180&max_lon=180&start_date=2022-06-01&end_date=2023-03-01
+```
+
+Response shape:
+```json
+{
+  "count": 1234,
+  "start_date": "2022-06-01",
+  "end_date": "2023-03-01",
+  "positions": [ {"platform_id":123,"lat":-40.1,"lon":150.2,"date":"2022-06-04T00:00:00Z"} ]
+}
+```
+
+### Frontend Usage
+
+An overlay `TimeControls` panel (top-left) lets you:
+
+1. Toggle between Year vs Range mode
+2. Pick a year (loads latest positions for that year)
+3. Choose start + end dates (range mode)
+4. Play / pause an animation that progressively reveals positions through time.
+
+Animation presently advances every 0.5s through the ordered positions (`distinct_float_positions_{year}` union). This is intentionally simple and can be upgraded (binning by day / month, tweening, etc.).
+
+### Future Ideas
+
+- Aggregate frames by month to reduce overdraw
+- Color encoding by age or depth
+- Scrubbable timeline bar instead of autoplay-only
+- Server-side temporal clustering

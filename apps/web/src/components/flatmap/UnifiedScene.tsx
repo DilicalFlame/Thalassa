@@ -1,15 +1,14 @@
 'use client'
 
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
 import { useRef, useState, useEffect } from 'react'
+import { useFrame } from '@react-three/fiber'
 import { SolidLandmasses } from '@/components/globe/LandMasses'
 import { FloatDots } from '@/components/floats/FloatDots'
 
 interface UnifiedSceneProps {
   is3D: boolean
-  isAutoRotating: boolean
-  onFloatClick: (platformId: number) => void
+  onFloatClick: (platformId: number, lat: number, lon: number) => void
   selectedFloatId?: number | null
   year?: number
   startDate?: string
@@ -22,11 +21,12 @@ interface UnifiedSceneProps {
     lon: number
     date: string
   }) => void
+  /** Horizontal framing offset applied to entire globe group (world units). */
+  framingOffsetX?: number
 }
 
 export const UnifiedScene = ({
   is3D,
-  isAutoRotating,
   onFloatClick,
   selectedFloatId = null,
   year = 2023,
@@ -35,6 +35,7 @@ export const UnifiedScene = ({
   play = false,
   speedMs = 500,
   onFrameFloat,
+  framingOffsetX = 0,
 }: UnifiedSceneProps) => {
   const [geoData, setGeoData] = useState(null)
   const globeGroupRef = useRef<THREE.Group>(null!) // Use non-null assertion
@@ -63,17 +64,34 @@ export const UnifiedScene = ({
     }
   }, [is3D]) // Dependency array ensures this runs only when is3D changes.
 
-  // The autorotation logic
-  useFrame((_, delta) => {
-    if (globeGroupRef.current && is3D && isAutoRotating) {
-      // Rotate slowly
-      globeGroupRef.current.rotation.y += delta * 0.05 // Use delta for frame-rate independence
-    }
-  })
+  // Autorotation disabled (was previously conditional on isAutoRotating)
+  // useFrame((_, delta) => {
+  //   if (globeGroupRef.current && is3D && isAutoRotating) {
+  //     globeGroupRef.current.rotation.y += delta * 0.05
+  //   }
+  // })
 
   // Define a different size for each camera projection.
   // These values might need tweaking for the perfect look.
   const dynamicDotSize = is3D ? 0.2 : 15
+
+  // Smoothly interpolate group position.x toward framingOffsetX
+  useFrame((_, delta) => {
+    if (!globeGroupRef.current) return
+    const current = globeGroupRef.current.position.x
+    const target = framingOffsetX
+    if (Math.abs(current - target) < 0.001) {
+      globeGroupRef.current.position.x = target
+      return
+    }
+    // simple critically damped like feel via exponential convergence
+    const lerpFactor = 1 - Math.exp(-delta * 6) // ~200ms half-life
+    globeGroupRef.current.position.x = THREE.MathUtils.lerp(
+      current,
+      target,
+      lerpFactor
+    )
+  })
 
   return (
     <>

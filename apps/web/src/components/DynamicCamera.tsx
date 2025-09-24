@@ -11,21 +11,27 @@ interface DynamicCameraProps {
   is3D: boolean
   onInteractionStart: () => void
   onInteractionEnd: () => void
+  /** When true, user interaction is disabled (e.g., while auto focusing). */
+  isLocked?: boolean
 }
 
 export const DynamicCamera = ({
   is3D,
   onInteractionStart,
   onInteractionEnd,
+  isLocked = false,
 }: DynamicCameraProps) => {
   if (is3D) {
     return (
       <>
-        {/* The 3D Perspective Camera (no changes here) */}
+        {/* Centered default camera; framing offset handled during focus animation */}
         <PerspectiveCamera makeDefault position={[0, 0, 12]} fov={45} />
         {/* --- CHANGE 2: Replace OrbitControls with TrackballControls --- */}
         <TrackballControls
+          enabled={!isLocked}
+          /* Disable panning & zoom for a more cinematic lock when focusing */
           noPan={true}
+          noZoom={false}
           rotateSpeed={2.5}
           onStart={onInteractionStart}
           onEnd={onInteractionEnd}

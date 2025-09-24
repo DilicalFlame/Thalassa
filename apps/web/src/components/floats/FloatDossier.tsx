@@ -12,6 +12,8 @@ interface DossierProps {
   year?: number
   startDate?: string
   endDate?: string
+  /** When true, renders as a side panel instead of centered modal overlay */
+  panel?: boolean
 }
 
 interface DossierDataPoint {
@@ -42,6 +44,7 @@ export const FloatDossier = ({
   year = 2023,
   startDate,
   endDate,
+  panel = false,
 }: DossierProps) => {
   const [data, setData] = useState<DossierDataPoint[]>([])
   const [pathData, setPathData] = useState<PathDataPoint[]>([])
@@ -388,9 +391,12 @@ export const FloatDossier = ({
 
   const currentChart = chartConfigs[activeChart]
 
+  const outerClass = panel ? 'dossier-side-panel-wrapper' : 'dossier-overlay'
+  const innerClass = panel ? 'dossier-side-panel' : 'dossier-content'
+
   return (
-    <div className='dossier-overlay'>
-      <div ref={dossierRef} className='dossier-content'>
+    <div className={outerClass}>
+      <div ref={dossierRef} className={innerClass}>
         <button
           ref={closeButtonRef}
           className='dossier-close'

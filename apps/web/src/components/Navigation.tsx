@@ -11,7 +11,7 @@ export default function Navigation() {
   const mapButtonRef = useHoverScale<HTMLAnchorElement>(1.05)
   const chatButtonRef = useHoverScale<HTMLAnchorElement>(1.05)
 
-  const handleNavClick = (type: 'map' | 'chat') => {
+  const handleNavClick = () => {
     // Trigger haptic feedback for navigation
     hapticUtils.buttonPress()
     // Page transition haptic will be triggered automatically
@@ -25,7 +25,7 @@ export default function Navigation() {
           <Link
             href='/'
             ref={mapButtonRef}
-            onClick={() => handleNavClick('map')}
+            onClick={() => handleNavClick()}
             className='inline-flex items-center rounded-lg border border-gray-700 bg-gray-900/80 px-4 py-2 text-white backdrop-blur-sm transition-colors hover:bg-gray-800/80'
           >
             <svg
@@ -50,11 +50,12 @@ export default function Navigation() {
             Map
           </Link>
         )}
-        {pathname !== '/chat' && (
+        {/* Chat button relocated to bottom-left on the map page; keep here only when not already shown (i.e., not on '/') */}
+        {pathname !== '/chat' && pathname !== '/' && (
           <Link
             href='/chat'
             ref={chatButtonRef}
-            onClick={() => handleNavClick('chat')}
+            onClick={() => handleNavClick()}
             className='inline-flex items-center rounded-lg border border-blue-500 bg-blue-600/90 px-4 py-2 text-white backdrop-blur-sm transition-colors hover:bg-blue-500/90'
           >
             <svg

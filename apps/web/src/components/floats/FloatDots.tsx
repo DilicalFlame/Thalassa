@@ -2,7 +2,7 @@
 
 import * as THREE from 'three'
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree, ThreeEvent } from '@react-three/fiber'
 import { lonLatToVector3 } from '../globe/LandMasses'
 
 interface FloatPosition {
@@ -18,7 +18,8 @@ interface FloatDotsProps {
   dotSize?: number
   circleRadius?: number
   is3D?: boolean
-  onFloatClick: (platformId: number) => void
+  /** Callback when a float is clicked. Provides id, lat, lon */
+  onFloatClick: (platformId: number, lat: number, lon: number) => void
   selectedFloatId?: number | null
   year?: number // when provided, fetch latest positions for that year
   startDate?: string // inclusive range start (YYYY-MM-DD)
@@ -59,49 +60,53 @@ export const FloatDots = ({
   const selectedMaterialRef = useRef<THREE.PointsMaterial>(null)
   const hoveredMaterialRef = useRef<THREE.PointsMaterial>(null)
 
-  const handleCanvasClick = () => {
-    if (!floatData.length) return
+  // Click vs drag discrimination -------------------------------------------
+  const pointerStateRef = useRef<{
+    downX: number
+    downY: number
+    category: 'unselected' | 'selected' | 'hovered'
+  } | null>(null)
+  const draggedRef = useRef(false)
+  const DRAG_THRESHOLD_PX = 6 // movement > this = drag, else click
 
-    // Set a more precise threshold for point intersection
-    raycaster.params.Points.threshold = 0.08 // Very small threshold for precise clicking
-
-    // Update the raycaster with the camera and pointer position
-    raycaster.setFromCamera(pointer, camera)
-
-    // Test intersections with all objects in the scene to stop ray early
-    const allIntersects = raycaster.intersectObjects(scene.children, true)
-
-    // Filter to only point objects and get the closest one
-    const pointIntersects = allIntersects.filter(
-      (intersect) =>
-        intersect.object === unselectedPointsRef.current ||
-        intersect.object === selectedPointsRef.current ||
-        intersect.object === hoveredPointsRef.current
-    )
-
-    if (pointIntersects.length > 0) {
-      // Get the closest intersection
-      const closestIntersection = pointIntersects[0]
-      const pointIndex = closestIntersection.index
-
-      if (pointIndex !== undefined) {
-        // Determine which object was clicked and find the corresponding float
-        let clickedFloat: FloatPosition | null = null
-
-        if (closestIntersection.object === unselectedPointsRef.current) {
-          clickedFloat = unselectedFloats[pointIndex]
-        } else if (closestIntersection.object === selectedPointsRef.current) {
-          clickedFloat = selectedFloats[pointIndex]
-        } else if (closestIntersection.object === hoveredPointsRef.current) {
-          clickedFloat = hoveredFloats[pointIndex]
-        }
-
-        if (clickedFloat) {
-          console.log('Clicked on float:', clickedFloat.platform_id)
-          onFloatClick(clickedFloat.platform_id)
-        }
-      }
+  const handlePointerDown = (
+    e: ThreeEvent<PointerEvent>,
+    category: 'unselected' | 'selected' | 'hovered'
+  ) => {
+    pointerStateRef.current = {
+      downX: e.clientX,
+      downY: e.clientY,
+      category,
     }
+    draggedRef.current = false
+  }
+
+  const handlePointerMove = (e: PointerEvent) => {
+    if (!pointerStateRef.current) return
+    const dx = e.clientX - pointerStateRef.current.downX
+    const dy = e.clientY - pointerStateRef.current.downY
+    if (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
+      draggedRef.current = true
+    }
+  }
+
+  const handlePointerUp = (
+    e: ThreeEvent<PointerEvent>,
+    category: 'unselected' | 'selected' | 'hovered'
+  ) => {
+    if (!pointerStateRef.current) return
+    const wasDrag = draggedRef.current
+    pointerStateRef.current = null
+    if (wasDrag) return // treat as rotation drag, not click
+    const idx = e.index
+    if (idx === undefined) return
+    let clickedFloat: FloatPosition | null = null
+    if (category === 'unselected') clickedFloat = unselectedFloats[idx]
+    if (category === 'selected') clickedFloat = selectedFloats[idx]
+    if (category === 'hovered') clickedFloat = hoveredFloats[idx]
+    if (!clickedFloat) return
+    e.stopPropagation()
+    onFloatClick(clickedFloat.platform_id, clickedFloat.lat, clickedFloat.lon)
   }
 
   // Single function to calculate dot size based on zoom - DRY principle
@@ -339,7 +344,18 @@ export const FloatDots = ({
     }
     if (!active.length)
       return { selectedFloats: [], hoveredFloats: [], unselectedFloats: [] }
-
+    // Exclusive mode in range view: if a float is selected and we are in range mode, show only that float's path (all occurrences)
+    if (selectedFloatId != null && rangeData.length) {
+      // Use FULL rangeData for path, not just frames up to current index
+      const pathForSelected = rangeData.filter(
+        (f) => f.platform_id === selectedFloatId
+      )
+      return {
+        selectedFloats: pathForSelected,
+        hoveredFloats: [],
+        unselectedFloats: [],
+      }
+    }
     const selected: FloatPosition[] = []
     const hovered: FloatPosition[] = []
     const unselected: FloatPosition[] = []
@@ -435,7 +451,9 @@ export const FloatDots = ({
         <points
           ref={unselectedPointsRef}
           geometry={unselectedGeometry}
-          onClick={handleCanvasClick}
+          onPointerDown={(e) => handlePointerDown(e, 'unselected')}
+          onPointerMove={(e) => handlePointerMove(e.nativeEvent)}
+          onPointerUp={(e) => handlePointerUp(e, 'unselected')}
         >
           <pointsMaterial
             ref={unselectedMaterialRef}
@@ -452,7 +470,9 @@ export const FloatDots = ({
         <points
           ref={hoveredPointsRef}
           geometry={hoveredGeometry}
-          onClick={handleCanvasClick}
+          onPointerDown={(e) => handlePointerDown(e, 'hovered')}
+          onPointerMove={(e) => handlePointerMove(e.nativeEvent)}
+          onPointerUp={(e) => handlePointerUp(e, 'hovered')}
         >
           <pointsMaterial
             ref={hoveredMaterialRef}
@@ -469,7 +489,9 @@ export const FloatDots = ({
         <points
           ref={selectedPointsRef}
           geometry={selectedGeometry}
-          onClick={handleCanvasClick}
+          onPointerDown={(e) => handlePointerDown(e, 'selected')}
+          onPointerMove={(e) => handlePointerMove(e.nativeEvent)}
+          onPointerUp={(e) => handlePointerUp(e, 'selected')}
         >
           <pointsMaterial
             ref={selectedMaterialRef}

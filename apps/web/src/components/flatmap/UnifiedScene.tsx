@@ -112,16 +112,16 @@ export const UnifiedScene = ({
 
         <FloatDots
           key={is3D ? '3d-dots' : '2d-dots'}
-            dotColor='#ffff00'
-            dotSize={dynamicDotSize}
-            is3D={is3D}
-            onFloatClick={onFloatClick}
-            selectedFloatId={selectedFloatId}
-            year={year}
-            startDate={startDate}
-            endDate={endDate}
-            play={play}
-          />
+          dotColor='#ffff00'
+          dotSize={dynamicDotSize}
+          is3D={is3D}
+          onFloatClick={onFloatClick}
+          selectedFloatId={selectedFloatId}
+          year={year}
+          startDate={startDate}
+          endDate={endDate}
+          play={play}
+        />
       </group>
     </>
   )

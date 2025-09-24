@@ -68,10 +68,11 @@ export const FloatDots = ({
     const allIntersects = raycaster.intersectObjects(scene.children, true)
 
     // Filter to only point objects and get the closest one
-    const pointIntersects = allIntersects.filter(intersect =>
-      intersect.object === unselectedPointsRef.current ||
-      intersect.object === selectedPointsRef.current ||
-      intersect.object === hoveredPointsRef.current
+    const pointIntersects = allIntersects.filter(
+      (intersect) =>
+        intersect.object === unselectedPointsRef.current ||
+        intersect.object === selectedPointsRef.current ||
+        intersect.object === hoveredPointsRef.current
     )
 
     if (pointIntersects.length > 0) {
@@ -100,10 +101,13 @@ export const FloatDots = ({
   }
 
   // Single function to calculate dot size based on zoom - DRY principle
-  const calculateDotSize = useCallback((zoom: number) => {
-    const ZOOM_SCALE_FACTOR = 120
-    return dotSize * (zoom / ZOOM_SCALE_FACTOR)
-  }, [dotSize])
+  const calculateDotSize = useCallback(
+    (zoom: number) => {
+      const ZOOM_SCALE_FACTOR = 120
+      return dotSize * (zoom / ZOOM_SCALE_FACTOR)
+    },
+    [dotSize]
+  )
 
   // Track zoom changes and handle hover detection in real-time
   useFrame(() => {
@@ -139,10 +143,11 @@ export const FloatDots = ({
       const allIntersects = raycaster.intersectObjects(scene.children, true)
 
       // Filter to only point objects
-      const pointIntersects = allIntersects.filter(intersect =>
-        intersect.object === unselectedPointsRef.current ||
-        intersect.object === selectedPointsRef.current ||
-        intersect.object === hoveredPointsRef.current
+      const pointIntersects = allIntersects.filter(
+        (intersect) =>
+          intersect.object === unselectedPointsRef.current ||
+          intersect.object === selectedPointsRef.current ||
+          intersect.object === hoveredPointsRef.current
       )
 
       if (pointIntersects.length > 0) {
@@ -161,9 +166,11 @@ export const FloatDots = ({
           }
 
           // Only update hover state if it's different and not already selected
-          if (newHoveredFloat &&
-              newHoveredFloat.platform_id !== hoveredFloatId &&
-              newHoveredFloat.platform_id !== selectedFloatId) {
+          if (
+            newHoveredFloat &&
+            newHoveredFloat.platform_id !== hoveredFloatId &&
+            newHoveredFloat.platform_id !== selectedFloatId
+          ) {
             setHoveredFloatId(newHoveredFloat.platform_id)
           }
         }
@@ -176,7 +183,11 @@ export const FloatDots = ({
     }
 
     // Ensure hovered material always has correct size in 2D mode (fix for zoom size issue)
-    if (!is3D && hoveredMaterialRef.current && camera instanceof THREE.OrthographicCamera) {
+    if (
+      !is3D &&
+      hoveredMaterialRef.current &&
+      camera instanceof THREE.OrthographicCamera
+    ) {
       const currentSize = calculateDotSize(camera.zoom)
       if (hoveredMaterialRef.current.size !== currentSize) {
         hoveredMaterialRef.current.size = currentSize
@@ -194,7 +205,12 @@ export const FloatDots = ({
         setLoading(true)
         setError(null)
         const params = new URLSearchParams({
-          min_lat: '-90', max_lat: '90', min_lon: '-180', max_lon: '180', limit: '5000', year: String(year)
+          min_lat: '-90',
+          max_lat: '90',
+          min_lon: '-180',
+          max_lon: '180',
+          limit: '5000',
+          year: String(year),
         })
         const res = await fetch(`${apiBaseUrl}/api/floats_in_box?${params}`)
         if (!res.ok) throw new Error(`Failed to fetch year ${year}`)
@@ -213,7 +229,9 @@ export const FloatDots = ({
       }
     }
     fetchYearData()
-    return () => { abort = true }
+    return () => {
+      abort = true
+    }
   }, [apiBaseUrl, year, startDate, endDate])
 
   // Fetch range data when both startDate & endDate present
@@ -225,9 +243,16 @@ export const FloatDots = ({
         setLoading(true)
         setError(null)
         const params = new URLSearchParams({
-          min_lat: '-90', max_lat: '90', min_lon: '-180', max_lon: '180', start_date: startDate, end_date: endDate
+          min_lat: '-90',
+          max_lat: '90',
+          min_lon: '-180',
+          max_lon: '180',
+          start_date: startDate,
+          end_date: endDate,
         })
-        const res = await fetch(`${apiBaseUrl}/api/floats_in_box/range?${params}`)
+        const res = await fetch(
+          `${apiBaseUrl}/api/floats_in_box/range?${params}`
+        )
         if (!res.ok) throw new Error('Failed to fetch range data')
         const payload = await res.json()
         const positions: FloatPosition[] = payload.positions || []
@@ -238,7 +263,9 @@ export const FloatDots = ({
         }
       } catch (e) {
         if (!abort) {
-          setError(e instanceof Error ? e.message : 'Failed to fetch range data')
+          setError(
+            e instanceof Error ? e.message : 'Failed to fetch range data'
+          )
           setRangeData([])
         }
       } finally {
@@ -246,14 +273,16 @@ export const FloatDots = ({
       }
     }
     fetchRangeData()
-    return () => { abort = true }
+    return () => {
+      abort = true
+    }
   }, [apiBaseUrl, startDate, endDate])
 
   // Animation loop for range playback
   useEffect(() => {
     if (!play || !rangeData.length) return
     const interval = setInterval(() => {
-      setFrameIndex(idx => (idx + 1) % rangeData.length)
+      setFrameIndex((idx) => (idx + 1) % rangeData.length)
     }, 500) // advance every 0.5s
     return () => clearInterval(interval)
   }, [play, rangeData])
@@ -299,7 +328,8 @@ export const FloatDots = ({
     } else {
       active = floatData
     }
-    if (!active.length) return { selectedFloats: [], hoveredFloats: [], unselectedFloats: [] }
+    if (!active.length)
+      return { selectedFloats: [], hoveredFloats: [], unselectedFloats: [] }
 
     const selected: FloatPosition[] = []
     const hovered: FloatPosition[] = []
@@ -315,7 +345,11 @@ export const FloatDots = ({
       }
     })
 
-    return { selectedFloats: selected, hoveredFloats: hovered, unselectedFloats: unselected }
+    return {
+      selectedFloats: selected,
+      hoveredFloats: hovered,
+      unselectedFloats: unselected,
+    }
   }, [floatData, rangeData, frameIndex, selectedFloatId, hoveredFloatId])
 
   // Create separate geometries for selected and unselected floats
@@ -413,7 +447,7 @@ export const FloatDots = ({
         >
           <pointsMaterial
             ref={hoveredMaterialRef}
-            color="#ff6600" // Orange color for hovered floats
+            color='#ff6600' // Orange color for hovered floats
             size={is3D ? initialDotSize * 1.3 : initialDotSize} // Only increase size in 3D mode
             sizeAttenuation={is3D}
             transparent={true}
@@ -430,7 +464,7 @@ export const FloatDots = ({
         >
           <pointsMaterial
             ref={selectedMaterialRef}
-            color="#8a2be2" // Violet color for selected floats
+            color='#8a2be2' // Violet color for selected floats
             size={initialDotSize * 1.5} // Larger size for selected floats
             sizeAttenuation={is3D}
             transparent={true}

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from 'react'
 
@@ -44,29 +44,35 @@ export const TimeControls = ({
   }
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 70,
-      left: 12,
-      background: 'rgba(0,0,0,0.55)',
-      padding: '10px 14px',
-      borderRadius: 8,
-      fontFamily: 'system-ui, sans-serif',
-      color: '#eee',
-      fontSize: 12,
-      backdropFilter: 'blur(4px)',
-      zIndex: 50,
-      maxWidth: 260,
-    }}>
+    <div
+      style={{
+        position: 'absolute',
+        top: 70,
+        left: 12,
+        background: 'rgba(0,0,0,0.55)',
+        padding: '10px 14px',
+        borderRadius: 8,
+        fontFamily: 'system-ui, sans-serif',
+        color: '#eee',
+        fontSize: 12,
+        backdropFilter: 'blur(4px)',
+        zIndex: 50,
+        maxWidth: 260,
+      }}
+    >
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <button
           onClick={() => setMode('year')}
           style={buttonStyle(mode === 'year')}
-        >Year</button>
+        >
+          Year
+        </button>
         <button
           onClick={() => setMode('range')}
           style={buttonStyle(mode === 'range')}
-        >Range</button>
+        >
+          Range
+        </button>
       </div>
 
       {mode === 'year' && (
@@ -81,7 +87,11 @@ export const TimeControls = ({
               }}
               style={selectStyle}
             >
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
             </select>
           </label>
         </div>
